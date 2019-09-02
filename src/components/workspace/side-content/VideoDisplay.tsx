@@ -66,7 +66,7 @@ class VideoDisplay extends React.Component<{}, VideoDisplayState> {
     const hideVideo = {
       display: 'none'
     };
-
+  
     const videoIsActive = this.state.mode === ('video' as VideoDisplayMode);
     const stillIsActive = this.state.mode === ('still' as VideoDisplayMode);
 

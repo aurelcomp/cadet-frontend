@@ -146,6 +146,31 @@ const videoLibrary = [
   'reset_filter'
 ];
 
+const faceAPILibrary = [
+  'face_matcher',
+  'loadLabeledImages',
+  'start',
+  'create_canva',
+  'load_models',
+  'face_detection',
+  'close_video',
+  'faceapi_load_tinyFaceDetector',
+  'faceapi_load_faceLandmark68Net',
+  'faceapi_load_faceRecognitionNet',
+  'faceapi_load_faceExpressionNet',
+  'faceapi_load_ssdMobilenetv1',
+  'launch_video',
+  'startDetection',
+  'media_addEventListener',
+  'detect',
+  'getImage'
+];
+
+const tensorflowLibrary = [
+  'run',
+  'fetch'
+];
+
 /**
  * Defines which external libraries are available for usage, and what
  * external symbols (exposed functions) are under them.
@@ -158,9 +183,11 @@ const libEntries: Array<[ExternalLibraryName, string[]]> = [
   [ExternalLibraryNames.SOUNDS, soundsLibrary],
   [ExternalLibraryNames.BINARYTREES, binaryTreesLibrary],
   [ExternalLibraryNames.PIXNFLIX, videoLibrary],
+  [ExternalLibraryNames.FACEAPI, faceAPILibrary],
+  [ExternalLibraryNames.TENSORFLOW, tensorflowLibrary],
   [
     ExternalLibraryNames.ALL,
-    runesLibrary.concat(curvesLibrary, soundsLibrary, binaryTreesLibrary, videoLibrary)
+    runesLibrary.concat(curvesLibrary, soundsLibrary, binaryTreesLibrary, videoLibrary, faceAPILibrary)
   ]
 ];
 

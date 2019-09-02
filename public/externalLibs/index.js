@@ -38,6 +38,16 @@ function loadAllLibs() {
     // support for Practical Assessments (presently none)
     // video
     '/externalLibs/video/video_lib.js',
+    /*
+    Load these libraries in loadLib and not loadLibAll
+    // faceAPI
+    '/externalLibs/faceapi/face-api.min.js',
+    '/externalLibs/faceapi/faceapi.js',
+    // TensorFlow.js
+    'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js',
+    'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js',
+    '/externalLibs/tensorflow/tensorflow.js',
+    */
     // inspector
     '/externalLibs/inspector/inspector.js',
     // env visualizer
@@ -74,6 +84,21 @@ function loadLib(externalLibraryName) {
         '/externalLibs/graphics/webGLhi_graph_ce.js',
         '/externalLibs/graphics/webGLgraphics.js',
         '/externalLibs/graphics/webGLcurve.js'
+      ]
+      break
+      case 'FACEAPI':
+      files = [
+      // faceAPI
+      '/externalLibs/faceapi/face-api.min.js',
+      '/externalLibs/faceapi/faceapi.js'
+      ]
+      break
+      case 'TENSORFLOW':
+      files = [
+        // TensorFlow.js
+        'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js',
+        'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js',
+        '/externalLibs/tensorflow/tensorflow.js'
       ]
       break
     default:
