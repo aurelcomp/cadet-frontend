@@ -151,6 +151,8 @@ export enum ExternalLibraryNames {
   SOUNDS = 'SOUNDS',
   BINARYTREES = 'BINARYTREES',
   PIXNFLIX = 'PIX&FLIX',
+  FACEAPI = 'FACEAPI',
+  TENSORFLOW = 'TENSORFLOW',
   ALL = 'ALL'
 }
 
