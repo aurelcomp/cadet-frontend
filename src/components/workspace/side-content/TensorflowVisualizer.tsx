@@ -17,8 +17,9 @@ class TensorflowVisualizer extends React.Component<{}, TensorflowVisualizerTabSt
       return (
         <div id="tensorflow-visualizer">
         <p>
-          The environmental visualizer generates the environmental model diagram based on
-          breakpoints set in the editor.
+          Welcome to the Tensorflow Visualizer!
+          <br />
+          <br />
         </p>
       </div>
     );

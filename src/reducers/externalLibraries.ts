@@ -147,6 +147,7 @@ const videoLibrary = [
 ];
 
 const faceAPILibrary = [
+  'init_webcam',
   'face_matcher',
   'loadLabeledImages',
   'start',
@@ -159,11 +160,38 @@ const faceAPILibrary = [
   'faceapi_load_faceRecognitionNet',
   'faceapi_load_faceExpressionNet',
   'faceapi_load_ssdMobilenetv1',
-  'launch_video',
   'startDetection',
   'media_addEventListener',
   'detect',
-  'getImage'
+  'getImage',
+  'trainRecognition',
+  'train',
+  'trainLabeledImages',
+  'encode_images',
+  'video_detect_faces',
+  'get_labels',
+  'get_nonnull_labels',
+  'change_label',
+  'get_images',
+  'encode_image',
+  'store_embeddings',
+  'get_embeddings',
+  'get_canvas_video',
+  'get_video_height',
+  'get_video_width',
+  'display_size',
+  'match_dimensions',
+  'set_interval',
+  'add_event_video',
+  'detect_all_faces_video',
+  'resize_results',
+  'resize_results',
+  'get_descriptors',
+  'find_best_match',
+  'draw_box',
+  'get_context',
+  'detection_done',
+  'set_timeout'
 ];
 
 const tensorflowLibrary = [

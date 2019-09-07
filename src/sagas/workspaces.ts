@@ -384,6 +384,12 @@ export default function* workspaceSaga(): SagaIterator {
         (window as any).loadLib('CURVES');
         (window as any).getReadyWebGLForCanvas('curve');
         break;
+      case ExternalLibraryNames.FACEAPI:
+        (window as any).loadLib('FACEAPI');
+        break;
+      case ExternalLibraryNames.TENSORFLOW:
+        (window as any).loadLib('TENSORFLOW');
+        break;
     }
     const globals: Array<[string, any]> = action.payload.library.globals as Array<[string, any]>;
     for (const [key, value] of globals) {

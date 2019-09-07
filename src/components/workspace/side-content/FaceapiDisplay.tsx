@@ -1,4 +1,4 @@
-import { Button, ButtonGroup, Divider} from '@blueprintjs/core';
+import { Button, Divider} from '@blueprintjs/core';
 import { IconNames } from '@blueprintjs/icons';
 import * as React from 'react';
 
@@ -17,18 +17,39 @@ class FaceapiDisplay extends React.Component<{}, FaceapiDisplayState> {
 
   }
 
-  public takePhoto() {
-    (window as any).video.takePhoto();
+  public takePhotoA() {
+    (window as any).video.takePhotoA();
   }
 
-  public async trainRecognition() {
-    (window as any).video.trainRecognition();
+  public takePhotoB() {
+    (window as any).video.takePhotoB();
   }
+
+  public takePhotoC() {
+    (window as any).video.takePhotoC();
+  }
+
+  public resetPhotoA() {
+    (window as any).resetPhotoA();
+  }
+
+  public resetPhotoB() {
+    (window as any).resetPhotoB();
+  }
+
+  public resetPhotoC() {
+    (window as any).resetPhotoC();
+  }
+
 
   // UI can be improved
   public render() {
     return (
       <div className="sa-video">
+        <div className="header-video">
+          Welcome to the Face API display! Call "launch_video();" to enable the webcam.
+        </div>
+        <br />
         <div className="sa-video-element">
           <video id="video"
             style={{position: 'absolute'}}
@@ -49,24 +70,27 @@ class FaceapiDisplay extends React.Component<{}, FaceapiDisplayState> {
           <div className="sa-video-header-element">
               <Button
                 className={'sa-live-video-button'}
-                style={{ height: 70 }}
+                style={{ height: 50 }}
                 icon={IconNames.CAMERA}
-                onClick={this.takePhoto}
+                onClick={this.takePhotoA}
                 text={'Take picture'}
-              />
-              <Button
-                className={'sa-still-image-button'}
-                style={{ height: 70 }}
-                icon={IconNames.CAMERA}
-                onClick={this.trainRecognition}
-                text={'Reset'}
               />
           </div>
           <Divider />
           <div className="sa-video-header-element">
             <canvas 
-              id="canvas-capture"  
-              style={{ height: 70 }}
+              id="canvas-capture-a"  
+              style={{ height: 50}}
+            />
+          </div>
+          <Divider />
+          <div className="sa-video-header-element">
+            <Button
+                className={'sa-still-image-button'}
+                style={{ height: 50 }}
+                icon={IconNames.RESET}
+                onClick={this.resetPhotoA}
+                text={'Reset'}
             />
           </div>
         </div>
@@ -75,23 +99,61 @@ class FaceapiDisplay extends React.Component<{}, FaceapiDisplayState> {
 
         <div className="sa-video-header">
           <div className="sa-video-header-element">
-            <ButtonGroup>
               <Button
                 className={'sa-live-video-button'}
+                style={{ height: 50 }}
                 icon={IconNames.CAMERA}
-                onClick={this.takePhoto}
+                onClick={this.takePhotoB}
                 text={'Take picture'}
               />
-              <Button
-                className={'sa-still-image-button'}
-                icon={IconNames.CAMERA}
-                text={'Reset'}
-              />
-            </ButtonGroup>
           </div>
           <Divider />
           <div className="sa-video-header-element">
-            <canvas id="canvas-capture-2"/>
+            <canvas 
+              id="canvas-capture-b"  
+              style={{ height: 50 }}
+            />
+          </div>
+          <Divider />
+          <div className="sa-video-header-element">
+              <Button
+                className={'sa-still-image-button'}
+                style={{ height: 50 }}
+                icon={IconNames.RESET}
+                onClick={this.resetPhotoB}
+                text={'Reset'}
+              />
+          </div>
+        </div>
+
+        <Divider />
+
+        <div className="sa-video-header">
+          <div className="sa-video-header-element">
+              <Button
+                className={'sa-live-video-button'}
+                style={{ height: 50 }}
+                icon={IconNames.CAMERA}
+                onClick={this.takePhotoC}
+                text={'Take picture'}
+              />
+          </div>
+          <Divider />
+          <div className="sa-video-header-element">
+            <canvas 
+              id="canvas-capture-c"  
+              style={{ height: 50 }}
+            />
+          </div>
+          <Divider />
+          <div className="sa-video-header-element">
+              <Button
+                className={'sa-still-image-button'}
+                style={{ height: 50 }}
+                icon={IconNames.RESET}
+                onClick={this.resetPhotoC}
+                text={'Reset'}
+              />
           </div>
         </div>
       </div>
