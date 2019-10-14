@@ -47,7 +47,7 @@ class FaceapiDisplay extends React.Component<{}, FaceapiDisplayState> {
     return (
       <div className="sa-video">
         <div className="header-video">
-          Welcome to the Face API display! Call "launch_video();" to enable the webcam.
+          Welcome to the Face API display! Call "init_webcam();" to enable the webcam.
         </div>
         <br />
         <div className="sa-video-element">
@@ -58,7 +58,12 @@ class FaceapiDisplay extends React.Component<{}, FaceapiDisplayState> {
             height={(window as any)._HEIGHT}
           />
           <canvas id="canvas"
-            style={{position: 'relative'}}
+            style={{position: 'relative', zIndex: 0}}
+            width={(window as any)._WIDTH}
+            height={(window as any)._HEIGHT}
+          />
+          <canvas id="hiden-canvas"
+            style={{position: 'absolute', visibility: 'hidden', zIndex: 1}}
             width={(window as any)._WIDTH}
             height={(window as any)._HEIGHT}
           />

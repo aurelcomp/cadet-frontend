@@ -4,347 +4,400 @@
 // // ---------------------------------------------
 
 
+  
+// // ---------------------------------------------
+// // LVL1 
+// // ---------------------------------------------
 
-// Functions for loading models
-function faceapi_load_tinyFaceDetector() {
-    return new Promise((resolve, reject) => {
-      faceapi.nets.tinyFaceDetector.loadFromUri('externalLibs/faceapi/models');
-      console.log('tinyFaceDetector loaded');
-    })
-  }
+// launch detection with
+// init_webcam();
+// trainRecognition();
   
-  function faceapi_load_faceLandmark68Net() {
-    return new Promise((resolve, reject) => {
-      faceapi.nets.faceLandmark68Net.loadFromUri('externalLibs/faceapi/models');
-      console.log('faceLandmark68Net loaded');
-    })
-  }
+// // ---------------------------------------------
+// // LVL2 - high level functions
+// // ---------------------------------------------
+
+// call the differents functions
+// init_webcam();
+//const e = encode_webcam_database();
+//const face = face_matcher(e(),0.6);
+//face;
+//video_detect_faces(face);
   
-  function faceapi_load_faceRecognitionNet() {
-    return new Promise((resolve, reject) => {
-      faceapi.nets.faceRecognitionNet.loadFromUri('externalLibs/faceapi/models');
-      console.log('faceRecognitionNet loaded');
-    })
-  }
-  
-  function faceapi_load_faceExpressionNet() {
-    return new Promise((resolve, reject) => {
-      faceapi.nets.faceExpressionNet.loadFromUri('externalLibs/faceapi/models');
-      console.log('faceExpressionNet loaded');
-    })
-  }
-  
-  function faceapi_load_ssdMobilenetv1() {
-    return new Promise((resolve, reject) => {
-      faceapi.nets.ssdMobilenetv1.loadFromUri('externalLibs/faceapi/models');
-      console.log('ssdMobilenetv1 loaded');
-    })
-  }
-  
-  // Video
-  
-  function face_matcher(labeledFaceDescriptors, thresold) {
-    return new faceapi.FaceMatcher((labeledFaceDescriptors, thresold))
-  }
-  
-  function media_addEventListener(media,condition, action){
-    media.addEventListener(condition, action)
-  }
-  
-  function detect() {
-    // const canvas = faceapi.createCanvasFromMedia(video)
-    const canvas = document.getElementById('canvas')
-    //const div = document.getElementsByClassName('sa-video-element')
-    //console.log(div)
-    //div[0].append(canvas)
-    const displaySize = { width: video.width, height: video.height }
-    faceapi.matchDimensions(canvas, displaySize)
-    setInterval(async () => {
-      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors()
-      const resizedDetections = faceapi.resizeResults(detections, displaySize)
-      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-      const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-      results.forEach((result, i) => {
-        const box = resizedDetections[i].detection.box
-        const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
-        drawBox.draw(canvas)
-      })
-    }, 100)
-  }
-  
-  async function startDetection() {
-    const labeledFaceDescriptors = await loadLabeledImages()
-    const maxDescriptorDistance = 0.6
-    console.log('Images Loaded')
-    navigator.getUserMedia(
-      { video: {} },
-      stream => video.srcObject = stream,
-      err => console.error(err)
-    )
-    const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, maxDescriptorDistance)
-    video.addEventListener('play', () => {
-      // const canvas = faceapi.createCanvasFromMedia(video)
-      const canvas = document.getElementById('canvas')
-      //const div = document.getElementsByClassName('sa-video-element')
-      //console.log(div)
-      //div[0].append(canvas)
-      const displaySize = { width: video.width, height: video.height }
-      faceapi.matchDimensions(canvas, displaySize)
-      setInterval(async () => {
-        const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors()
-        const resizedDetections = faceapi.resizeResults(detections, displaySize)
-        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-        const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-        results.forEach((result, i) => {
-          const box = resizedDetections[i].detection.box
-          const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
-          drawBox.draw(canvas)
-        })
-      }, 100)
-    })
-  }
-  
-  async function loadLabeledImages() {
-      const labels = ['Victor']
-      return Promise.all(
-        labels.map(async label => {
-          const descriptions = []
-          for (let i = 1; i <= 4; i++) {
-            const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/aurelcomp/Database/master/labeled_images/${label}/${i}.jpg`)
-            console.log('loaded')
-            const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-            console.log('calculated')
-            if (!detections) {
-              throw new Error(`no faces detected for ${label} image ${i}`)
-            }
-            descriptions.push(detections.descriptor)
-          }
-          return new faceapi.LabeledFaceDescriptors(label, descriptions)
-        })
-      )
-  }
-  
-  
-  
-  
-  
-  // Recognotion on one image
-  async function start() {
-    const labeledFaceDescriptors = await loadLabeledImages();
-    console.log('loaded')
-    const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.5);
-    let image
-      image = await faceapi.fetchImage(`https://raw.githubusercontent.com/aurelcomp/Face-Recognition-JavaScript-master/master/test_images/de_gaulle.jpg`)
-      const displaySize = { width: image.width, height: image.height }
-      const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors()
-      const resizedDetections = faceapi.resizeResults(detections, displaySize)
-      const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-      results.forEach((result, i) => {
-        console.log(result)
-      })
-  }
-  
-  
-  // Take a snap of the video (for FaceAPI) and save it in a labeled map
-  // Initialise the labeled map
-  var labeledImages = new Map();
-  let imagesA=[];
-  let imagesB=[];
-  let imagesC=[];
-  let labelA="A";
-  let labelB="B";
-  let labelC="C";
-  labeledImages.set(labelA,imagesA);
-  labeledImages.set(labelB,imagesB);
-  labeledImages.set(LabelC,imagesC);
-  
-  // Take a snap from webcam by clicking on "Take Photo" button
-  // One function for each button A, B, C
-  video.takePhotoA = async function(){
-    const canvas = document.getElementById('canvas-capture-a');
-    const width = 200;
-    const height = 150;
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, width, height);
-    const img = canvas.toDataURL('image/png');
-    const image = await faceapi.fetchImage(img);
-    imagesA.push(image);
-  }
-  video.takePhotoB = async function(){
-    const canvas = document.getElementById('canvas-capture-b');
-    const width = 200;
-    const height = 150;
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, width, height);
-    const img = canvas.toDataURL('image/png');
-    const image = await faceapi.fetchImage(img);
-    imagesB.push(image);
-  }
-  video.takePhotoC = async function(){
-    const canvas = document.getElementById('canvas-capture-c');
-    const width = 200;
-    const height = 150;
-    canvas.width = width;
-    canvas.height = height;
-    const context = canvas.getContext('2d');
-    context.drawImage(video, 0, 0, width, height);
-    const img = canvas.toDataURL('image/png');
-    const image = await faceapi.fetchImage(img);
-    imagesC.push(image);
-  }
-  
-  // Reset images for the label by clicking on "Reset" button
-  // One function for each button A, B, C
-  function resetPhotoA() {
-    imagesA.length=0;
-    var canvas = document.getElementById('canvas-capture-a');
-    var context = canvas.getContext('2d');
-    var img = context.createImageData(canvas.width, canvas.height);
-    for (var i = img.data.length; --i >= 0; )
-      img.data[i] = 0;
-    context.putImageData(img, 0, 0);
-  }
-  function resetPhotoB() {
-    imagesB.length=0;
-    var canvas = document.getElementById('canvas-capture-b');
-    var context = canvas.getContext('2d');
-    var img = context.createImageData(canvas.width, canvas.height);
-    for (var i = img.data.length; --i >= 0; )
-      img.data[i] = 0;
-    context.putImageData(img, 0, 0);
-  }
-  function resetPhotoC() {
-    imagesC.length=0;
-    var canvas = document.getElementById('canvas-capture-c');
-    var context = canvas.getContext('2d');
-    var img = context.createImageData(canvas.width, canvas.height);
-    for (var i = img.data.length; --i >= 0; )
-      img.data[i] = 0;
-    context.putImageData(img, 0, 0);
-  }
-  
-  
-  let faceMatcher;
-  // Train Face Recognition when clicking on "Train Recognition button"
-  video.trainRecognition = async function () {
-    video.removeEventListener('play', await eventListener);
-    const maxDescriptorDistance = 0.6;
-    const labeledFaceDescriptors = await trainLabeledImages();
-    faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, maxDescriptorDistance);
-    navigator.getUserMedia(
-      { video: {} },
-      stream => video.srcObject = stream,
-      err => console.error(err)
-    )
-    video.addEventListener('play', eventListener);
-  }
-  
-  async function eventListener() {
-    const canvas = document.getElementById('canvas')
-    const displaySize = { width: video.width, height: video.height }
-    faceapi.matchDimensions(canvas, displaySize)
-    setInterval(async () => {
-      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors()
-      const resizedDetections = faceapi.resizeResults(detections, displaySize)
-      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-      const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-      results.forEach((result, i) => {
-        const box = resizedDetections[i].detection.box
-        const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
-        drawBox.draw(canvas)
-      })
-    }, 100)
-  }
-  
-  async function trainLabeledImages(){
-    const labels = Array.from(labeledImages.keys());
-    var labelsNoZero = [];
-    // Remove labels with no images
-    labels.forEach(function(label) {
-      if (labeledImages.get(label).length!=0) {
-        labelsNoZero.push(label);
-      }
-    })
-    return Promise.all(
-      labelsNoZero.map(async label => {
-        const descriptions = [];
-        const imageList = labeledImages.get(label);
-          for (let i = 0 ; i <= imageList.length -1 ; i++) {
-            const detections = await faceapi.detectSingleFace(imageList[i]).withFaceLandmarks().withFaceDescriptor()
-            if (!detections) {
-              throw new Error(`no faces detected for ${label} image ${i+1}`)
-            }
-            descriptions.push(detections.descriptor)
-          }
-          labeledFaceDescriptors = new faceapi.LabeledFaceDescriptors(label, descriptions);
-          return labeledFaceDescriptors
-      })
-    )
-  }
-  
-  function get_labels() {
-      return Array.from(labeledImages.keys());
-  }
-  
-  
-  
-  // code for  encode labeled database
+
+// // ---------------------------------------------
+// // LVL3 - code the function to encode 
+// // LVL3bis - code function to detect
+// // ---------------------------------------------
+
+
+// code to encode labeled database
+function encode(){
   let L=[];
-  function encode(){
-    const labels = get_nonnull_labels();
-    // for each label
-  
-    for (let i = 0; i < array_length(labels); i = i+1){
-      const label = labels[i];
-      const images_label = get_images(label);
-      const descriptions = [];
-      // for each image in label
-      for (let j = 0; j < array_length(images_label); j = j+1){
-        const image = images_label[j];
-        const detections = encode_image(image);
-        descriptions[j]=detections;
-      }
+  const labels = get_nonnull_labels();
+  // for each label
+  for (let i = 0; i < array_length(labels); i = i+1){
+    const label = labels[i];
+    const images_label = get_images(label);
+    const descriptions = [];
+    // for each image in label
+    for (let j = 0; j < array_length(images_label); j = j+1){
+      const image = images_label[j];
+      const detections = encode_single_face(image);
+      descriptions[j]=detections;
+    }
     store_embeddings(L, label, descriptions);
+  }
+  return L;
+}
+
+
+// without set_timeout and with do_after_detection
+function detect(face_matcher) {
+  function eventVideo (){
+    const myCanvas = get_canvas_video();
+    const width = get_video_width();
+    const height = get_video_height();
+    const myDisplaySize = display_size(height, width);
+    match_dimensions(myCanvas, myDisplaySize);
+    set_interval( () => {
+      const detections = detect_all_faces_video("withFaceDescriptors","tinyFaceDetector",[]);
+      // if we want to decompose but to complex to deal with several async
+      //const landmarks = landmarks(faces);
+      //const detections = descriptors(landmarks);
+      do_after_detection(() => {
+      const resizedDetections = resize_results(detections(),myDisplaySize);
+      get_context(myCanvas);
+      for (let i =0; i < array_length(resizedDetections); i=i+1){
+        const detection = resizedDetections[i];
+        const detection_descriptor = get_descriptors(detection);
+        const result =find_best_match(face_matcher,detection_descriptor);
+        draw_box(detection, result, myCanvas);
+      }
+      }); 
+    },200);
+  }
+  add_event_video(eventVideo);
+}
+
+// with use of set_timeout
+function detect(face_matcher) {
+  function eventVideo (){
+    const myCanvas = get_canvas_video();
+    const width = get_video_width();
+    const height = get_video_height();
+    const myDisplaySize = display_size(height, width);
+    match_dimensions(myCanvas, myDisplaySize);
+    set_interval( () => {
+      const detections = detect_all_faces_video("withFaceDescriptors","tinyFaceDetector",[]);
+      // if we want to decompose but to complex to deal with several async
+      //const landmarks = landmarks(faces);
+      //const detections = descriptors(landmarks);
+      set_timeout(() => {
+        if (detection_done() === true) {
+          const resizedDetections = resize_results(detections(),myDisplaySize);
+          get_context(myCanvas);
+          for (let i =0; i < array_length(resizedDetections); i=i+1){
+            const detection = resizedDetections[i];
+            const detection_descriptor = get_descriptors(detection);
+            const result =find_best_match(face_matcher,detection_descriptor);
+            draw_box(detection, result, myCanvas);
+          }
+        }
+        else{
+            
+        }
+      }, 200*0.99); 
+    },200);
+  }
+  add_event_video(eventVideo);
+}
+  
+// code to write after by the student in the console
+// const L = encode();
+// to convert functions to embedding values
+// const T = get_embeddings(L);
+// const matcher = face_matcher(T,0.6);
+// detect(matcher);
+
+
+// // ---------------------------------------------
+// // LVL4 - Just play with faceapi without recognition
+// // ---------------------------------------------
+
+// with set_timeout
+function expression() {
+  function eventVideo (){
+    const myCanvas = get_canvas_video();
+    const width = get_video_width();
+    const height = get_video_height();
+    const myDisplaySize = display_size(height, width);
+    match_dimensions(myCanvas, myDisplaySize);
+    set_interval( () => {
+      const detections = detect_all_faces_video("all","tinyFaceDetector",[]);
+      set_timeout(() => {
+        if (detection_done() === true) {
+          const resizedDetections = resize_results(detections(),myDisplaySize);
+          get_context(myCanvas);
+          draw_detections(myCanvas, resizedDetections);
+          draw_landmarks(myCanvas, resizedDetections);
+          draw_expressions(myCanvas, resizedDetections);
+          // find good syntax for age and gender
+          //draw_age_gender(myCanvas, resizedDetections);
+        }
+        else{
+            
+        }
+      }, 200*0.99); 
+    },200);
+  }
+  add_event_video(eventVideo);
+}
+
+// version without set_timeout but with
+// continuation passing function
+function expression() {
+  function eventVideo (){
+    const myCanvas = get_canvas_video();
+    const width = get_video_width();
+    const height = get_video_height();
+    const myDisplaySize = display_size(height, width);
+    match_dimensions(myCanvas, myDisplaySize);
+    set_interval( () => {
+      const detections = detect_all_faces_video("all","tinyFaceDetector",[]);
+      do_after_detection(() => {
+          const resizedDetections = resize_results(detections(),myDisplaySize);
+          get_context(myCanvas);
+          draw_detections(myCanvas, resizedDetections);
+          draw_landmarks(myCanvas, resizedDetections);
+          draw_expressions(myCanvas, resizedDetections);
+          // find good syntax for age and gender
+          //draw_age_gender(myCanvas, resizedDetections);
+      }); 
+    },200);
+  }
+  add_event_video(eventVideo);
+}
+
+
+// // ---------------------------------------------
+// // LVL5 - Prepare data for tensorflow
+// // ---------------------------------------------
+
+
+// ------------
+// preparation data from face api to tensorflow
+
+// encode labeled database to prepare data for building classifier (to be done in Face API)
+function encode_tf(){
+  let data=[];
+  let data_image=[];
+  const labels = get_nonnull_labels();
+  // for each label
+  for (let numberLabel = 0; numberLabel < array_length(labels); numberLabel = numberLabel+1){
+    const label = labels[numberLabel];
+    const images_label = get_images(label);
+    // for each image in label
+    for (let j = 0; j < array_length(images_label); j = j+1){
+      data_image=[];
+      const image = images_label[j];
+      const detections = encode_single_face(image);
+      array_push(data_image,detections);
+      array_push(data_image,numberLabel);
+      array_push(data,data_image);
     }
   }
-  //const T = get_embeddings(L);
-  
-  // code for detect faces from face_matcher
-  function detect(face_matcher) {
-    function eventVideo (){
-      const myCanvas = get_canvas_video();
-      const width = get_video_width();
-      const height = get_video_height();
-      const myDisplaySize = display_size(height, width);
-      match_dimensions(myCanvas, myDisplaySize);
-      set_interval( () => {
-        const detections = detect_all_faces_video();
-        // if we want to decompose but to complex to deal with several async
-        //const landmarks = landmarks(faces);
-        //const detections = descriptors(landmarks);
-        set_timeout(() => {
-          if (detection_done() === true) {
-            const resizedDetections = resize_results(detections(),myDisplaySize);
-            get_context(myCanvas);
-            for (let i =0; i < array_length(resizedDetections); i=i+1){
-              const detection = resizedDetections[i];
-              const detection_descriptor = get_descriptors(detection);
-              const result =find_best_match(face_matcher,detection_descriptor);
-              draw_box(detection, result, myCanvas);
-            }
-          }
-          else{
-              
-          }
-        }, 200*0.99); 
-      },200);
-    }
-    add_event_video(eventVideo);
+   return data;
+}
+
+// take in arg the list previouly created to give the same list with the result of the embedding calculation
+function get_embeddings(data){
+  let labeled_embeddings=[];
+  let embedding_image=[];
+  for (let i =0; i < array_length(data); i=i+1){
+      embedding_image=[];
+      const embedding_function=data[i][0];
+      const label=data[i][1];
+      const embedings = embedding_function();
+      for (let numberEmbedding=0; numberEmbedding<128 ; numberEmbedding=numberEmbedding+1){
+          array_push(embedding_image,embedings[to_string(numberEmbedding)]);  
+      }
+      array_push(embedding_image,label);
+      array_push(labeled_embeddings,embedding_image);
   }
+  return labeled_embeddings;
+}
+
+
+// // ---------------------------------------------
+// // LVL6 - Glasses detection 
+// // ---------------------------------------------
+
+// first version
+function capture_faces() {
+  function eventVideo (){
+    const myCanvas = get_canvas_video();
+    const width = get_video_width();
+    const height = get_video_height();
+    const myDisplaySize = display_size(height, width);
+    match_dimensions(myCanvas, myDisplaySize);
+    set_interval( () => {
+      const detections = detect_all_faces_video("simpleDetection","tinyFaceDetector",[]);
+      set_timeout(() => {
+        if (detection_done() === true) {
+          const resizedDetections = resize_results(detections(),myDisplaySize);
+          get_context(myCanvas);
+          console_log(resizedDetections);
+          draw_detections(myCanvas, resizedDetections);
+          const boxes = box_faces(resizedDetections);
+          console_log(boxes);
+          const images = convert_to_img(boxes);
+          console_log(images);
+          classify_images(images);
+        }
+        else{
+            
+        }
+      }, 200*0.99);
+    },200);
+  }
+  add_event_video(eventVideo);
+}
+
+
+// 2nd version with coding the image classification
+// give asynchronus problems. Thus we need to use set_timeout 
+//to let the time to the program to calculate the prediction
+function capture_faces2(knn) {
+  function eventVideo (){
+    const myCanvas = get_canvas_video();
+    const width = get_video_width();
+    const height = get_video_height();
+    const myDisplaySize = display_size(height, width);
+    match_dimensions(myCanvas, myDisplaySize);
+    set_interval( () => {
+      const detections = detect_all_faces_video("simpleDetection","tinyFaceDetector",[]);
+      set_timeout(() => {
+        if (detection_done() === true) {
+          const resizedDetections = resize_results(detections(),myDisplaySize);
+          get_context(myCanvas);
+          const boxes = box_faces(resizedDetections);
+          for (let i=0; i < array_length(boxes) ; i=i+1){
+            const box = boxes[i];
+            const image = convert_to_image(box);
+            const inference = infer_mobilenet(image);
+            const result2 = predict_class(knn, inference);
+            set_timeout(() => {
+                const result = result2();
+                const category = result[0];
+                let label = 'unknown';
+                if (category === '0'){
+                    label = 'no glasses';
+                }
+                else {
+                    label = 'glasses';
+                }
+                draw_custom_box(box, label, myCanvas);
+            }, 300);
+          }
+        }
+        else{
+            
+        }
+      }, 200);
+    },1000);
+  }
+  add_event_video(eventVideo);
+}
+
+// capture_faces2 without set_timeout and using do_after_prediction
+function capture_faces2(knn) {
+  function eventVideo (){
+    const myCanvas = get_canvas_video();
+    const width = get_video_width();
+    const height = get_video_height();
+    const myDisplaySize = display_size(height, width);
+    match_dimensions(myCanvas, myDisplaySize);
+    set_interval( () => {
+      const detections = detect_all_faces_video("simpleDetection","tinyFaceDetector",[]);
+      do_after_detection(() => {
+          const resizedDetections = resize_results(detections(),myDisplaySize);
+          get_context(myCanvas);
+          const boxes = box_faces(resizedDetections);
+          for (let i=0; i < array_length(boxes) ; i=i+1){
+            const box = boxes[i];
+            const image = convert_to_image(box);
+            const inference = infer_mobilenet(image);
+            const result2 = predict_class(knn, inference);
+            do_after_prediction(() => {
+                const result = result2();
+                const category = result[0];
+                let label = 'unknown';
+                if (category === '0'){
+                    label = 'no glasses';
+                }
+                else {
+                    label = 'glasses';
+                }
+                draw_custom_box(box, label, myCanvas);
+            });
+          }
+      });
+    },1000);
+  }
+  add_event_video(eventVideo);
+}
+
+// code to launch
+load_mobilenet();
+const knn = create_knn();
+train_glasses_detection(knn);
+init_webcam();
+capture_faces2(knn);
+
+
+
+// code for train KNN on online stored database
+// train KNN over mobilnet inference on an online stored database
+// load images first
+function load_images(){
+  let labeled_images=[];
+  const labels = ['glasses', 'no_glasses'];
+  const images_per_label = [3, 3];
+  for (let i =0; i < array_length(labels); i=i+1){
+    for (let j =0; j < images_per_label[i]; j=j+1){
+      const label = labels[i];
+      const j_string = int_to_string(j+1);
+      const image = fetch_image('https://raw.githubusercontent.com/aurelcomp/Database/master/glasses_detection/' + label + '/' + j_string + '.png');
+      array_push(labeled_images, [label,image]);
+    }
+  }
+  return labeled_images;
+}
+// train knn in adding mobilenet inference of each image 
+function train_knn(classifier, labeled_images){
   
-  
-  
+  for (let i =0; i < array_length(labeled_images); i=i+1){
+    // image is a function, we need to call it to 
+    // get the loaded image
+    const image = labeled_images[i][1];
+    const label = labeled_images[i][0];
+    const inference = infer_mobilenet(image());
+    if (label==='glasses'){
+      add_example_knn(classifier, inference, 1);
+      console_log('added to KNN glasses');
+    }
+    else {
+      add_example_knn(classifier, inference, 0);
+      console_log('added to KNN no glasses');
+    }
+  }
+}
+
+// code to launch
+// load_mobilenet();
+// const knn = create_knn();
+// const labeled_images = load_images();
+// train_knn(knn, labeled_images);
+// init_webcam();
+// capture_faces2(knn);

@@ -164,16 +164,16 @@ const faceAPILibrary = [
   'media_addEventListener',
   'detect',
   'getImage',
-  'trainRecognition',
+  'train_recognition',
   'train',
   'trainLabeledImages',
-  'encode_images',
+  'encode_webcam_database',
   'video_detect_faces',
   'get_labels',
   'get_nonnull_labels',
   'change_label',
   'get_images',
-  'encode_image',
+  'encode_single_face',
   'store_embeddings',
   'get_embeddings',
   'get_canvas_video',
@@ -191,12 +191,61 @@ const faceAPILibrary = [
   'draw_box',
   'get_context',
   'detection_done',
-  'set_timeout'
+  'set_timeout',
+  'do_after_detection',
+  'draw_detections',
+  'draw_landmarks',
+  'draw_expressions',
+  'draw_age_gender',
+  'array_push',
+  'to_string',
+  'box_faces',
+  'convert_to_img',
+  'classify_images',
+  'train_glasses_detection',
+  'convert_to_image',
+  'draw_custom_box',
+  'fetch_image',
+  'int_to_string',
+  'detect_all_faces_video_worker',
+  'delay'
 ];
 
 const tensorflowLibrary = [
   'run',
-  'fetch'
+  'fetch',
+  'get_data',
+  'array_push',
+  'array_slice',
+  'tf_tidy',
+  'tf_concat',
+  'tf_tensor2d',
+  'tf_tensor1d',
+  'tf_one_hot',
+  'convertToTensor',
+  'console_log',
+  'convert_to_tensor',
+  'train_model',
+  'predict',
+  'alertPrediction',
+  'tf_sequential',
+  'add_input_layer',
+  'add_hidden_layer',
+  'tf_shape',
+  'compile',
+  'tf_train',
+  'model_fit',
+  'get_proba',
+  'get_highest_prediction',
+  'tf_slice',
+  'app',
+  'load_mobilenet',
+  'infer_mobilenet',
+  'classify_mobilenet',
+  'create_knn',
+  'predict_class',
+  'add_example_knn',
+  'do_after_prediction'
 ];
 
 /**
@@ -211,11 +260,10 @@ const libEntries: Array<[ExternalLibraryName, string[]]> = [
   [ExternalLibraryNames.SOUNDS, soundsLibrary],
   [ExternalLibraryNames.BINARYTREES, binaryTreesLibrary],
   [ExternalLibraryNames.PIXNFLIX, videoLibrary],
-  [ExternalLibraryNames.FACEAPI, faceAPILibrary],
-  [ExternalLibraryNames.TENSORFLOW, tensorflowLibrary],
+  [ExternalLibraryNames.MACHINELEARNING, faceAPILibrary.concat(tensorflowLibrary)],
   [
     ExternalLibraryNames.ALL,
-    runesLibrary.concat(curvesLibrary, soundsLibrary, binaryTreesLibrary, videoLibrary, faceAPILibrary)
+    runesLibrary.concat(curvesLibrary, soundsLibrary, binaryTreesLibrary, videoLibrary)
   ]
 ];
 

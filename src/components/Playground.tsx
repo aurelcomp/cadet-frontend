@@ -234,16 +234,16 @@ class Playground extends React.Component<IPlaygroundProps, PlaygroundState> {
       // Enable video tab only when 'PIX&FLIX' is selected
       tabs.push(videoDisplayTab);
     }
-    
-    if (this.props.externalLibraryName === ExternalLibraryNames.TENSORFLOW) {
-      // Enable Tensorflow Visualizer for TENSORFLOW 
+
+    if (
+      this.props.externalLibraryName === ExternalLibraryNames.MACHINELEARNING
+    ) {
+      // Enable Face API Display only when 'MACHINELEARNING' is selected
+      tabs.push(FaceapiDisplayTab);
+      // Enable Tensorflow Visualizer only when 'MACHINELEARNING' is selected
       tabs.push(TensorflowVisualizerTab);
     }
 
-    if (this.props.externalLibraryName === ExternalLibraryNames.FACEAPI) {
-      // Enable Face API Display for FACEAPI 
-      tabs.push(FaceapiDisplayTab);
-    }
 
     if (this.props.sourceChapter >= 2) {
       // Enable Data Visualizer for Source Chapter 2 and above

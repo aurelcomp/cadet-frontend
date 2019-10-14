@@ -38,16 +38,17 @@ function loadAllLibs() {
     // support for Practical Assessments (presently none)
     // video
     '/externalLibs/video/video_lib.js',
-    /*
-    Load these libraries in loadLib and not loadLibAll
-    // faceAPI
-    '/externalLibs/faceapi/face-api.min.js',
-    '/externalLibs/faceapi/faceapi.js',
+  /*
+    //Load these libraries in loadLib and not loadLibAll
     // TensorFlow.js
     'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js',
     'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js',
     '/externalLibs/tensorflow/tensorflow.js',
-    */
+    
+    // faceAPI
+    '/externalLibs/faceapi/face-api.min.js',
+    '/externalLibs/faceapi/faceapi.js',
+  */  
     // inspector
     '/externalLibs/inspector/inspector.js',
     // env visualizer
@@ -86,19 +87,20 @@ function loadLib(externalLibraryName) {
         '/externalLibs/graphics/webGLcurve.js'
       ]
       break
-      case 'FACEAPI':
+      case 'MACHINELEARNING':
       files = [
-      // faceAPI
-      '/externalLibs/faceapi/face-api.min.js',
-      '/externalLibs/faceapi/faceapi.js'
-      ]
-      break
-      case 'TENSORFLOW':
-      files = [
-        // TensorFlow.js
+        // Tensorflow (to be loaded first to avoid issues with FaceAPI)
         'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@1.0.0/dist/tf.min.js',
         'https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-vis@1.0.2/dist/tfjs-vis.umd.min.js',
-        '/externalLibs/tensorflow/tensorflow.js'
+        'https://unpkg.com/@tensorflow-models/mobilenet',
+        'https://unpkg.com/@tensorflow-models/knn-classifier',
+        '/externalLibs/tensorflow/tensorflow.js',
+        '/externalLibs/tensorflow/tensorflow_lib.js',
+        '/externalLibs/tensorflow/nn_from_scratch.js',
+        // faceAPI
+        '/externalLibs/faceapi/face-api_last_version.min.js',
+        //'/externalLibs/faceapi/face-api.min.js',
+        '/externalLibs/faceapi/faceapi.js',
       ]
       break
     default:
