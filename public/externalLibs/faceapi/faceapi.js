@@ -1,19 +1,15 @@
-//Load all models when selecting FACEAPI
-Promise.all([
-  faceapi.nets.tinyFaceDetector.loadFromUri('externalLibs/faceapi/models'),
-  faceapi.nets.faceLandmark68Net.loadFromUri('externalLibs/faceapi/models'),
-  faceapi.nets.faceRecognitionNet.loadFromUri('externalLibs/faceapi/models'),
-  faceapi.nets.faceExpressionNet.loadFromUri('externalLibs/faceapi/models'),
-  faceapi.nets.ageGenderNet.loadFromUri('externalLibs/faceapi/models'),
-  faceapi.nets.ssdMobilenetv1.loadFromUri('externalLibs/faceapi/models')
-]).then(console.log('FaceAPI Models loaded'))
-
 // Function for loading FaceAPI models
 let faceapi_models_loaded = undefined;
+
+/**
+ * loads the face API models for face recognition
+ * @return {undefined}
+ */
 function load_faceapi(){
   load_faceapi_async();
   return "loading Face API..."
 }
+
 async function load_faceapi_async(){
   console.log('Loading Face API...');
   // Load the model.
@@ -24,41 +20,9 @@ async function load_faceapi_async(){
     faceapi.nets.faceExpressionNet.loadFromUri('externalLibs/faceapi/models'),
     faceapi.nets.ageGenderNet.loadFromUri('externalLibs/faceapi/models'),
     faceapi.nets.ssdMobilenetv1.loadFromUri('externalLibs/faceapi/models')
-  ]).then(console.log('FaceAPI Models loaded'))
-}
-
-function faceapi_load_tinyFaceDetector() {
-  return new Promise((resolve, reject) => {
-    faceapi.nets.tinyFaceDetector.loadFromUri('externalLibs/faceapi/models');
-    console.log('tinyFaceDetector loaded');
-  })
-}
-
-function faceapi_load_faceLandmark68Net() {
-  return new Promise((resolve, reject) => {
-    faceapi.nets.faceLandmark68Net.loadFromUri('externalLibs/faceapi/models');
-    console.log('faceLandmark68Net loaded');
-  })
-}
-
-function faceapi_load_faceRecognitionNet() {
-  return new Promise((resolve, reject) => {
-    faceapi.nets.faceRecognitionNet.loadFromUri('externalLibs/faceapi/models');
-    console.log('faceRecognitionNet loaded');
-  })
-}
-
-function faceapi_load_faceExpressionNet() {
-  return new Promise((resolve, reject) => {
-    faceapi.nets.faceExpressionNet.loadFromUri('externalLibs/faceapi/models');
-    console.log('faceExpressionNet loaded');
-  })
-}
-
-function faceapi_load_ssdMobilenetv1() {
-  return new Promise((resolve, reject) => {
-    faceapi.nets.ssdMobilenetv1.loadFromUri('externalLibs/faceapi/models');
-    console.log('ssdMobilenetv1 loaded');
+  ]).then(() => {
+    console.log('FaceAPI Models loaded')
+    faceapi_models_loaded = true;
   })
 }
 
@@ -67,6 +31,11 @@ function faceapi_load_ssdMobilenetv1() {
 let video = document.getElementById('video');
 let video_launched = undefined;
 
+/**
+ * Initialize webcam by obtaining permission to 
+ * use the default device webcam.
+ * @return {undefined}
+ */
 function init_webcam(){
   video_launched = true;
   navigator.getUserMedia(
@@ -77,80 +46,10 @@ function init_webcam(){
   return "obtaining webcam permission"
 }
 
-// Detection with online stored Database
-async function startDetection() {
-  const labeledFaceDescriptors = await loadLabeledImages()
-  const maxDescriptorDistance = 0.6
-  console.log('Images Loaded')
-  navigator.getUserMedia(
-    { video: {} },
-    stream => video.srcObject = stream,
-    err => console.error(err)
-  )
-  const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, maxDescriptorDistance)
-  video.addEventListener('play', () => {
-    // const canvas = faceapi.createCanvasFromMedia(video)
-    const canvas = document.getElementById('canvas')
-    //const div = document.getElementsByClassName('sa-video-element')
-    //console.log(div)
-    //div[0].append(canvas)
-    const displaySize = { width: video.width, height: video.height }
-    faceapi.matchDimensions(canvas, displaySize)
-    setInterval(async () => {
-      const detections = await faceapi.detectAllFaces(video, new faceapi.TinyFaceDetectorOptions()).withFaceLandmarks().withFaceDescriptors()
-      const resizedDetections = faceapi.resizeResults(detections, displaySize)
-      canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height)
-      const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-      results.forEach((result, i) => {
-        const box = resizedDetections[i].detection.box
-        const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
-        drawBox.draw(canvas)
-      })
-    }, 100)
-  })
-}
 
-async function loadLabeledImages() {
-  const labels = ['Victor']
-  return Promise.all(
-    labels.map(async label => {
-      const descriptions = []
-      for (let i = 4; i <= 4; i++) {
-        const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/aurelcomp/Database/master/labeled_images/${label}/${i}.jpg`)
-        console.log('loaded')
-        const detections = await faceapi.detectSingleFace(img).withFaceLandmarks().withFaceDescriptor()
-        console.log('calculated')
-        if (!detections) {
-          throw new Error(`no faces detected for ${label} image ${i}`)
-        }
-        descriptions.push(detections.descriptor)
-      }
-      return new faceapi.LabeledFaceDescriptors(label, descriptions)
-    })
-  )
-}
-
-
-
-
-
-// Recognition on one image
-async function start() {
-  const labeledFaceDescriptors = await loadLabeledImages();
-  console.log('loaded')
-  const faceMatcher = new faceapi.FaceMatcher(labeledFaceDescriptors, 0.5);
-  let image
-    image = await faceapi.fetchImage(`https://raw.githubusercontent.com/aurelcomp/Face-Recognition-JavaScript-master/master/test_images/de_gaulle.jpg`)
-    const displaySize = { width: image.width, height: image.height }
-    const detections = await faceapi.detectAllFaces(image).withFaceLandmarks().withFaceDescriptors()
-    const resizedDetections = faceapi.resizeResults(detections, displaySize)
-    const results = resizedDetections.map(d => faceMatcher.findBestMatch(d.descriptor))
-    results.forEach((result, i) => {
-      console.log(result)
-    })
-}
-
-
+// // ---------------------------------------------
+// // Functions for the Face API interface
+// // ---------------------------------------------
 // Take a snap of the video (for FaceAPI) and save it in a labeled map
 // Initialise the labeled map
 var labeledImages = new Map();
@@ -240,10 +139,20 @@ function resetPhotoC() {
 // // ---------------------------------------------
 
 // Train Face Recognition after having launched the video
+
+/**
+ * Train face recognition on webcam stream with the 
+ * database you have created in the FACE API interface.
+ * @return {undefined}
+ */
 function train_recognition() {
   if (video_launched === undefined){
     throw new Error("Call init_webcam(); " +
         "to obtain permission to use the webcam and launch the video");
+  }
+  if (faceapi_models_loaded === undefined){
+    throw new Error("Call load_faceapi(); " +
+        "to load the Face API models before using face recognition");
   }
   else {
     if (imagesA.length + imagesB.length + imagesC.length === 0) {
@@ -333,6 +242,23 @@ async function trainLabeledImages(){
 
 let labeledFaceDescriptors;
 let loaded_images= undefined
+
+/**
+* Encode the database you have created in the FACE API interface and returns
+* an encoding promise: a nullary function that returns an array containing 
+* faces’ embeddings for each label when encoding calculation is finished. 
+* Example:
+* <CODE>
+* int_webcam();
+* // Take pictures in the FACE API interface to build your database of known faces
+* // Then, call the function to encode this database
+* const promise = encode_webcam_database();
+* // In next query, you can get the promised embeddings, by
+* // applying the promise:
+* const encoded_database = promise();
+* </CODE>
+* @return {function} promise: nullary function which returns the encoded database
+*/
 function encode_webcam_database() {
   if (video_launched === undefined){
     throw new Error("Call 'init_webcam();' to enable the webcam. Then, " +
@@ -358,17 +284,31 @@ async function face_descriptors(){
   labeledFaceDescriptors = await trainLabeledImages();
 }
 
-
-function face_matcher(encoded_images, maxDescriptorDistance) {
-  if (Array.isArray(encoded_images)){
-    return new faceapi.FaceMatcher(encoded_images, maxDescriptorDistance);
+/**
+ * Create a face_matcher which store the parameters needed 
+ * to apply recognition with regards to the encoded_database. 
+ * @param {Array} encoded_database - Array containing the encoded database.
+ * @param {Number} max_descriptor_distance - The maximum distance between 
+ * the embeddings (the encoding) of two faces to be categorised as the 
+ * same person. Value between 0 and 1: 0.6 is a good value. 
+ * @return {face-matcher} face-matcher which store the parameters needed to apply recognition.
+ */
+function face_matcher(encoded_database, max_descriptor_distance) {
+  if (Array.isArray(encoded_database)){
+    return new faceapi.FaceMatcher(encoded_database, max_descriptor_distance);
   }
-  // if encoded_images not an array
+  // if encoded_database not an array
   else{
-    throw new Error("encoded_images should be an array containing the encoded database")
+    throw new Error("encoded_database should be an array containing the encoded database")
   }
 }
 
+/**
+ * Launch the face recognition on the webcam with the face_matcher.
+ * @param {face-matcher} face_matcher - The face-matcher containing parameters 
+ * needed to apply face recognition.
+ * @return {undefined}
+ */
 function video_detect_faces(face_matcher) {
   detect(face_matcher);
   return "detection activated"
@@ -403,11 +343,25 @@ async function detect(face_matcher) {
 // // ---------------------------------------------
 
 // Get the labels of the pictures database
+
+/**
+ * Returns the labels of the database you have 
+ * created in the FACE API interface.
+ * @return {Array} labels: an array containing the 
+ * labels of the faces database.
+ */
 function get_labels() {
   return (Array.from(labeledImages.keys()))
 }
 
 // Get the labels which have at least one image in the database
+
+/**
+ * Returns the labels of the database you have created 
+ * in the FACE API interface which contains at least one image.
+ * @return {Array} labels: an array containing the labels 
+ * of the non null faces database.
+ */
 function get_nonnull_labels() {
   const labels = get_labels();
   var labelsNonNull = [];
@@ -421,18 +375,27 @@ function get_nonnull_labels() {
 }
 
 // Change the label name
-function change_label(formerLabel, newLabel) {
-  if (typeof formerLabel === "string" && typeof newLabel === "string") {
+
+/**
+ * Change the former_label into new_label in the database you 
+ * have create in the FACE API interface. The value of the 
+ * three labels are initialised at “A”, “B” and “C”.
+ * @param {String} former_label - the label you want to change. 
+ * @param {String} new_label - the new value of the label you want to set.
+ * @return {undefined} 
+ */
+function change_label(former_label, new_label) {
+  if (typeof former_label === "string" && typeof new_label === "string") {
     const labels = get_labels();
-    if (labels.includes(formerLabel)) {
-      const images = labeledImages.get(formerLabel)
-      labeledImages.delete(formerLabel);
-      labelA = newLabel
-      labeledImages.set(newLabel, images);
-      return ("label '" + formerLabel + "' changed to '" + labelA + "'")
+    if (labels.includes(former_label)) {
+      const images = labeledImages.get(former_label)
+      labeledImages.delete(former_label);
+      labelA = new_label
+      labeledImages.set(new_label, images);
+      return ("label '" + former_label + "' changed to '" + labelA + "'")
     }
     else {
-      throw new Error("Label "+ formerLabel + " doesn't exist");
+      throw new Error("Label "+ former_label + " doesn't exist");
     }
   }
   else {
@@ -442,6 +405,13 @@ function change_label(formerLabel, newLabel) {
 
 
 // Get the images for one particular label
+
+/**
+ * Gives an Array containing the images for a given label in 
+ * the database you have created in the FACE API interface.
+ * @param {String} label - The label of which you want the images.
+ * @return {Array} Array of images.
+ */
 function get_images(label) {
   return (labeledImages.get(label))
 }
@@ -454,22 +424,40 @@ let iteration = -1;
 let errorDetection = undefined
 // ask for label in parameter to return error for the concerned
 // label if we can't detect face on the picture
+
+/**
+ * Encode the face detected in the image and returns an 
+ * encoding promise: a nullary function that returns the 
+ * face’s embeddings when encoding calculation is finished. 
+ * @param {Image} image - The image of the face you want to encode.
+ * @param {String} label - The label of the image. 
+ * Allow the function to return an error based on the 
+ * label name if no face is detected in the image.
+ * @return {function} encoding promise: a nullary function that returns 
+ * the face’s embeddings when encoding calculation is finished.
+ */
 function encode_single_face(image,label) {
-  list_encoded.push(undefined)
-  iteration = iteration + 1;
-  const i = iteration
-  calc_embeddings(image,i,label);
-  return () => {
-    if (list_encoded[i] === undefined) {
-      throw new Error("encoding image still in progress")
-        }
-    else if (errorDetection !== undefined){
-      throw new Error(`no faces detected for ${errorDetection}, reset database for ${errorDetection} and start again`)
-    }
-    else {
-      return calculation_embeddings[i];
-    }
-  };
+  if (faceapi_models_loaded === undefined){
+    throw new Error("Call load_faceapi(); " +
+        "to load the Face API models before using them");
+  }
+  else {
+    list_encoded.push(undefined)
+    iteration = iteration + 1;
+    const i = iteration
+    calc_embeddings(image,i,label);
+    return () => {
+      if (list_encoded[i] === undefined) {
+        throw new Error("encoding image still in progress")
+          }
+      else if (errorDetection !== undefined){
+        throw new Error(`no faces detected for ${errorDetection}, reset database for ${errorDetection} and start again`)
+      }
+      else {
+        return calculation_embeddings[i];
+      }
+    };
+  }
 }
 
 async function calc_embeddings(image,i,label) {
@@ -484,17 +472,36 @@ async function calc_embeddings(image,i,label) {
 }
 
 // Store embeddings in a labeled map
-function store_embeddings(L, label, descriptions) {
+
+/**
+ * Store the labelled encoding promise in the array labelled_encoding_promise. 
+ * Useful to create a face-matcher then.
+ * @param {Array} labelled_encoding_promises - Array containing the labelled 
+ * encoding promises of known faces stored in the database.
+ * @param {String} label - The label corresponding to the encoding promise.
+ * @param {function} encoding_promise - The encoding promise you want to store.
+ * @return {undefined}
+ */
+function store_embeddings(labelled_encoding_promises, label, encoding_promise) {
   let labeled_embeddings ={};
   labeled_embeddings._label = label;
-  labeled_embeddings._descriptors = descriptions;
-  L.push(labeled_embeddings);
+  labeled_embeddings._descriptors = encoding_promise;
+  labelled_encoding_promises.push(labeled_embeddings);
 }
 
 // Convert the stored functions embedding labeled into a labeled map with the value of these functions
-function get_embeddings(functions_embeddings){
+
+/**
+ * Call all the stored promises to get the calculated embeddings and 
+ * returns an Array of the same dimensions than labelled_encoding_promise 
+ * containing the labelled embeddings for each labelled face.
+ * @param {Array} labelled_encoding_promises - Array containing the labelled 
+ * encoding promises of known faces stored in the database.
+ * @return {Array} An Array containing the labelled embeddings.
+ */
+function get_embeddings(labelled_encoding_promises){
   T=[]
-  functions_embeddings.forEach(function(functions_embeddings_one_label){
+  labelled_encoding_promises.forEach(function(functions_embeddings_one_label){
     descriptions=[];
     label=functions_embeddings_one_label._label;
     functions_embeddings_one_label._descriptors.forEach(function(embeddings){
@@ -506,32 +513,70 @@ function get_embeddings(functions_embeddings){
 }
 
 // Functions to calculate and draw the detection on video
-// get canvas video
+
+/**
+ * Get canvas containing the video image.
+ * @return {Canvas} canvas containing the video image.
+ */
 function get_canvas_video() {
-return document.getElementById('canvas')
+  return document.getElementById('canvas')
 }
 
+/**
+ * Get height dimension of the video.
+ * @return {Number} height dimension of the video.
+ */
 function get_video_height() {
-return video.height
+  return video.height
 }
 
+/**
+ * Get width dimension of the video.
+ * @return {Number} width dimension of the video.
+ */
 function get_video_width() {
-return video.width
+  return video.width
 }
 
+/**
+ * Gives a display-size containing the dimensions of the 
+ * video that you pass to the function.
+ * @param {Number} height_video - height of the video.
+ * @param {Number} width_video - width of the video.
+ * @return {display-size} display-size containing height and width dimensions
+ */
 function display_size(heightVideo, widthVideo) {
-return { width: widthVideo, height: heightVideo }
+  return { width: widthVideo, height: heightVideo }
 }
 
-function match_dimensions(canvas, displaySize) {
-faceapi.matchDimensions(canvas, displaySize);
+/**
+ * Matches dimensions of the canvas to the one of display_size.
+ * @param {Canvas} my_canvas - The canvas of which you want to set dimensions
+ * @param {display-size} display_size - The dimensions you want to set
+ * @return {undefined}
+ */
+function match_dimensions(my_canvas, display_size) {
+  faceapi.matchDimensions(my_canvas, display_size);
 }
 
-function set_interval(myFunction, time) {
-setInterval(myFunction, time);
+/**
+ * Call myFunction every time milliseconds. Used in the function 
+ * <CODE>action_video</CODE> passed to <CODE>add_event_video(action_video)</CODE>
+ * to apply this function periodically on the webcam stream.
+ * @param {function} my_function - The function you want to call periodically. 
+ * @param {display-size} time - Time between two calls of myFunction.
+ * @return {undefined}
+ */
+function set_interval(my_function, time) {
+  setInterval(my_function, time);
 }
 
-function add_event_video(actionVideo){
+/**
+ * Runs the function action_video at every frame of the webcam video.
+ * @param {function} action_video - The function you want to run on the video. 
+ * @return {undefined}
+ */
+function add_event_video(action_video){
   if (video_launched === undefined){
     throw new Error("Call init_webcam(); " +
         "to obtain permission to use the webcam and launch the video "+
@@ -543,7 +588,7 @@ function add_event_video(actionVideo){
       stream => video.srcObject = stream,
       err => console.error(err)
     )
-    video.addEventListener('play', actionVideo);
+    video.addEventListener('play', action_video);
   }
 }
 
@@ -561,12 +606,62 @@ function detect_all_faces_video2() {
 }
 
 // add parameters for detection
-function detect_all_faces_video(detectionType, option, parameters) {
-  detect_faces=undefined
-  async_detect_all_faces_video(detectionType, option, parameters);
-  return () => {
-    if (detect_faces === true) {
-      return faces
+
+/**
+ * Encode the faces detected in the webcam video and returns an 
+ * detection promise: a nullary function that returns the 
+ * faces’ detection when calculation is finished. 
+ * All parameters are optionals, but you still need to specify 
+ * all the parameters in order.
+ * Ex:
+ * <CODE>detect_all_faces_video(detection_type)</CODE> works.
+ * <CODE>detect_all_faces_video(detection_type, model)</CODE> works.
+ * <CODE>detect_all_faces_video(detection_type, model, parameters)</CODE> works.
+ * <CODE>detect_all_faces_video(model, parameters)</CODE> DOES NOT work.
+ * <CODE>detect_all_faces_video(detection_type, parameters)</CODE> DOES NOT work.
+ * <CODE>detect_all_faces_video(parameters)</CODE> DOES NOT work.
+ * @param {String} detection_type - (optional) The detection type you want to 
+ * execute on the video: 
+ * <CODE>"simpleDetection"</CODE>: detect faces on the video.  
+ * <CODE>"withFaceLandmarks"</CODE>: detect faces on the video and 
+ * calculate the 68 landmark points for each face. 
+ * <CODE>"withFaceDescriptors"</CODE>: detect faces on the video, 
+ * calculate the 68 landmark points and calculate the 128 embeddings
+ * for each face.  
+ * <CODE>"withExpression"</CODE>: detect faces on the video and
+ * determine the expression of each face. 
+ * <CODE>"withAgeAndGender"</CODE>: detect faces on the video and
+ * determine the age and the gender for each face. 
+ * <CODE>"all"</CODE>: detect faces on the video, calculate 
+ * the 68 landmark points, calculate the 128 embeddings, and
+ * determine the expression, the age and the gender for each face.
+ * value by default: <CODE>"all"</CODE>
+ * @param {String} model - (optional) The model used to detect faces:
+ * <CODE>"tinyFaceDetector"</CODE>: fast and performant model.  
+ * <CODE>"ssdMobilenetv1"</CODE>: very high performance but slower.
+ * value by default: <CODE>"tinyFaceDetector"</CODE>
+ * @param {Array} parameters - (optional) an Array containing the two parameters 
+ * of the model/
+ * for "tinyFaceDetector": <CODE>[input_size, score_threshold]</CODE>
+ * <CODE>input_size</CODE>: size at which video is processed. The smaller 
+ * the faster, but less precise in detecting smaller faces. Must be divisible
+ * by 32, common sizes are 128, 160, 224, 320, 416, 512, 608. 
+ * value by default: <CODE>224</CODE>
+ * @return {function} detection promise: a nullary function that returns the 
+ * faces’ detections when calculation is finished. 
+ */
+function detect_all_faces_video(detection_type, model, parameters) {
+  if (faceapi_models_loaded === undefined){
+    throw new Error("Call load_faceapi(); " +
+        "to load the Face API models before using them");
+  }
+  else {
+    detect_faces=undefined
+    async_detect_all_faces_video(detection_type, model, parameters);
+    return () => {
+      if (detect_faces === true) {
+        return faces
+      }
     }
   }
 }
@@ -578,14 +673,18 @@ async function async_detect_all_faces_video2() {
   detect_faces=true;
 }
 
-async function async_detect_all_faces_video(detectionType, option, parameters) {
+
+async function async_detect_all_faces_video(detectionType = "all", option = "tinyFaceDetector", parameters = []) {
+  // we set default value for the parameter inputSize of TinyFaceDetector 
+  // to 224 instead of the normal 416, because 416 makes detection slow
+  const inputSize_tinyFaceDetector = 224;
   // all different cases for detection
   switch (detectionType){
     case "withFaceDescriptors":
       switch (option) {
         case "tinyFaceDetector":
           if (parameters.length === 0) {
-            const options = new faceapi.TinyFaceDetectorOptions()
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: inputSize_tinyFaceDetector })
             faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceDescriptors();
             detect_faces=true;
             return
@@ -611,163 +710,189 @@ async function async_detect_all_faces_video(detectionType, option, parameters) {
           }
       }
     case "withFaceLandmarks":
-        switch (option) {
-          case "tinyFaceDetector":
-            if (parameters.length === 0) {
-              const options = new faceapi.TinyFaceDetectorOptions()
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
-              detect_faces=true;
-              return
-            }
-          case "ssdMobilenetv1":
-            if (parameters.length === 0) {
-              const options = new faceapi.SsdMobilenetv1Options()
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
-              detect_faces=true;
-              return
-            }
-        }
-      case "simpleDetection":
-        switch (option) {
-          case "tinyFaceDetector":
-            if (parameters.length === 0) {
-              const options = new faceapi.TinyFaceDetectorOptions()
-              faces = await faceapi.detectAllFaces(video, options);
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options);
-              detect_faces=true;
-              return
-            }
-          case "ssdMobilenetv1":
-            if (parameters.length === 0) {
-              const options = new faceapi.SsdMobilenetv1Options()
-              faces = await faceapi.detectAllFaces(video, options);
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options);
-              detect_faces=true;
-              return
-            }
-        }
-      case "withExpression":
-        switch (option) {
-          case "tinyFaceDetector":
-            if (parameters.length === 0) {
-              const options = new faceapi.TinyFaceDetectorOptions()
-              faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
-              detect_faces=true;
-              return
-            }
-          case "ssdMobilenetv1":
-            if (parameters.length === 0) {
-              const options = new faceapi.SsdMobilenetv1Options()
-              faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
-              detect_faces=true;
-              return
-            }
-        }
-      case "withAge&Gender":
-        switch (option) {
-          case "tinyFaceDetector":
-            if (parameters.length === 0) {
-              const options = new faceapi.TinyFaceDetectorOptions()
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
-              detect_faces=true;
-              return
-            }
-          case "ssdMobilenetv1":
-            if (parameters.length === 0) {
-              const options = new faceapi.SsdMobilenetv1Options()
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
-              detect_faces=true;
-              return
-            }
-        }
-      case "all":
-        switch (option) {
-          case "tinyFaceDetector":
-            if (parameters.length === 0) {
-              const options = new faceapi.TinyFaceDetectorOptions()
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
-              detect_faces=true;
-              return
-            }
-          case "ssdMobilenetv1":
-            if (parameters.length === 0) {
-              const options = new faceapi.SsdMobilenetv1Options()
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
-              detect_faces=true;
-              return
-            }
-            else {
-              const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
-              faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
-              detect_faces=true;
-              return
-            }
-        }  
-}
-  // common sizes are 128, 160, 224, 320, 416, 512, 608 (video recommend 128, 160, 224)
-  const options = new faceapi.TinyFaceDetectorOptions({ inputSize: 224 })
-  faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceDescriptors();
-  detect_faces=true;
+      switch (option) {
+        case "tinyFaceDetector":
+          if (parameters.length === 0) {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: inputSize_tinyFaceDetector })
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
+            detect_faces=true;
+            return
+          }
+        case "ssdMobilenetv1":
+          if (parameters.length === 0) {
+            const options = new faceapi.SsdMobilenetv1Options()
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks();
+            detect_faces=true;
+            return
+          }
+      }
+    case "simpleDetection":
+      switch (option) {
+        case "tinyFaceDetector":
+          if (parameters.length === 0) {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: inputSize_tinyFaceDetector })
+            faces = await faceapi.detectAllFaces(video, options);
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options);
+            detect_faces=true;
+            return
+          }
+        case "ssdMobilenetv1":
+          if (parameters.length === 0) {
+            const options = new faceapi.SsdMobilenetv1Options()
+            faces = await faceapi.detectAllFaces(video, options);
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options);
+            detect_faces=true;
+            return
+          }
+      }
+    case "withExpression":
+      switch (option) {
+        case "tinyFaceDetector":
+          if (parameters.length === 0) {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: inputSize_tinyFaceDetector })
+            faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
+            detect_faces=true;
+            return
+          }
+        case "ssdMobilenetv1":
+          if (parameters.length === 0) {
+            const options = new faceapi.SsdMobilenetv1Options()
+            faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceExpressions();
+            detect_faces=true;
+            return
+          }
+      }
+    case "withAgeAndGender":
+      switch (option) {
+        case "tinyFaceDetector":
+          if (parameters.length === 0) {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: inputSize_tinyFaceDetector })
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
+            detect_faces=true;
+            return
+          }
+        case "ssdMobilenetv1":
+          if (parameters.length === 0) {
+            const options = new faceapi.SsdMobilenetv1Options()
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withAgeAndGender();
+            detect_faces=true;
+            return
+          }
+      }
+    case "all":
+      switch (option) {
+        case "tinyFaceDetector":
+          if (parameters.length === 0) {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: inputSize_tinyFaceDetector })
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.TinyFaceDetectorOptions({ inputSize: parameters[0], scoreThreshold: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
+            detect_faces=true;
+            return
+          }
+        case "ssdMobilenetv1":
+          if (parameters.length === 0) {
+            const options = new faceapi.SsdMobilenetv1Options()
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
+            detect_faces=true;
+            return
+          }
+          else {
+            const options = new faceapi.SsdMobilenetv1Options({ minConfidence: parameters[0], maxResults: parameters[1]})
+            faces = await faceapi.detectAllFaces(video, options).withFaceLandmarks().withFaceExpressions().withAgeAndGender().withFaceDescriptors();
+            detect_faces=true;
+            return
+          }
+      }  
+  }
 }
 
-
-function resize_results(detections,displaySize) {
-return faceapi.resizeResults(detections, displaySize)
+/**
+ * Resizes the faces' detections with regards to display_size.
+ * @param {Array} detections - Array of detected faces.
+ * @param {Array} display_size - display_size contain the reference
+ * dimensions with which the detections have to be resized.
+ * @return {Array} Array of resized detected faces.
+ */
+function resize_results(detections, display_size) {
+  return faceapi.resizeResults(detections, display_size)
 }
+
+/**
+ * Used to get the descriptors (the embeddings) of a detected face.
+ * @param {detection} detection - A detected face.
+ * @return {Array} Embeddings of the face.
+ */
 function get_descriptors(detection){
-return detection.descriptor
+  return detection.descriptor
+}
+
+/**
+ * Used to get the model's estimation on the age of a detected face.
+ * @param {detection} detection - A detected face.
+ * @return {Number} The estimated age of the face.
+ */
+function get_age(detection){
+  return detection.age
+}
+
+/**
+ * Used to get the model's inference on the gender of a detected face.
+ * @param {detection} detection - A detected face.
+ * @return {String} The infered gender of the face.
+ */
+function get_gender(detection){
+  return detection.gender
 }
 
 function find_best_match(face_matcher, descriptor) {
@@ -790,11 +915,6 @@ function draw_landmarks(canvas, resizedDetections) {
 
 function draw_expressions(canvas, resizedDetections) {
   faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
-}
-
-function draw_age_gender(canvas, resizedDetections){
-  // find the good syntax, it's not the good one
-  faceapi.draw.drawWithAge(canvas, resizedDetections);
 }
 
 function get_context(canvas) {
@@ -842,7 +962,7 @@ function to_string(num){
 
 
 // get the position of the faces detected
-function box_faces(resizedDetection) {
+function get_boxes(resizedDetection) {
   var boxes = [];
   resizedDetection.forEach(function(detection) {
     const box = detection._box;

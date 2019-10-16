@@ -4,14 +4,14 @@
 // // ---------------------------------------------
 
 
-  
+
 // // ---------------------------------------------
 // // LVL1 
 // // ---------------------------------------------
 
 // launch detection with
 // init_webcam();
-// trainRecognition();
+// train_recognition();
   
 // // ---------------------------------------------
 // // LVL2 - high level functions
@@ -19,10 +19,10 @@
 
 // call the differents functions
 // init_webcam();
-//const e = encode_webcam_database();
-//const face = face_matcher(e(),0.6);
-//face;
-//video_detect_faces(face);
+// const e = encode_webcam_database();
+// const face = face_matcher(e(),0.6);
+// face;
+// video_detect_faces(face);
   
 
 // // ---------------------------------------------
@@ -44,7 +44,7 @@ function encode(){
     for (let j = 0; j < array_length(images_label); j = j+1){
       const image = images_label[j];
       const detections = encode_single_face(image);
-      descriptions[j]=detections;
+      array_push(descriptions, detections);
     }
     store_embeddings(L, label, descriptions);
   }
@@ -62,9 +62,6 @@ function detect(face_matcher) {
     match_dimensions(myCanvas, myDisplaySize);
     set_interval( () => {
       const detections = detect_all_faces_video("withFaceDescriptors","tinyFaceDetector",[]);
-      // if we want to decompose but to complex to deal with several async
-      //const landmarks = landmarks(faces);
-      //const detections = descriptors(landmarks);
       do_after_detection(() => {
       const resizedDetections = resize_results(detections(),myDisplaySize);
       get_context(myCanvas);
@@ -80,38 +77,6 @@ function detect(face_matcher) {
   add_event_video(eventVideo);
 }
 
-// with use of set_timeout
-function detect(face_matcher) {
-  function eventVideo (){
-    const myCanvas = get_canvas_video();
-    const width = get_video_width();
-    const height = get_video_height();
-    const myDisplaySize = display_size(height, width);
-    match_dimensions(myCanvas, myDisplaySize);
-    set_interval( () => {
-      const detections = detect_all_faces_video("withFaceDescriptors","tinyFaceDetector",[]);
-      // if we want to decompose but to complex to deal with several async
-      //const landmarks = landmarks(faces);
-      //const detections = descriptors(landmarks);
-      set_timeout(() => {
-        if (detection_done() === true) {
-          const resizedDetections = resize_results(detections(),myDisplaySize);
-          get_context(myCanvas);
-          for (let i =0; i < array_length(resizedDetections); i=i+1){
-            const detection = resizedDetections[i];
-            const detection_descriptor = get_descriptors(detection);
-            const result =find_best_match(face_matcher,detection_descriptor);
-            draw_box(detection, result, myCanvas);
-          }
-        }
-        else{
-            
-        }
-      }, 200*0.99); 
-    },200);
-  }
-  add_event_video(eventVideo);
-}
   
 // code to write after by the student in the console
 // const L = encode();
@@ -125,35 +90,6 @@ function detect(face_matcher) {
 // // LVL4 - Just play with faceapi without recognition
 // // ---------------------------------------------
 
-// with set_timeout
-function expression() {
-  function eventVideo (){
-    const myCanvas = get_canvas_video();
-    const width = get_video_width();
-    const height = get_video_height();
-    const myDisplaySize = display_size(height, width);
-    match_dimensions(myCanvas, myDisplaySize);
-    set_interval( () => {
-      const detections = detect_all_faces_video("all","tinyFaceDetector",[]);
-      set_timeout(() => {
-        if (detection_done() === true) {
-          const resizedDetections = resize_results(detections(),myDisplaySize);
-          get_context(myCanvas);
-          draw_detections(myCanvas, resizedDetections);
-          draw_landmarks(myCanvas, resizedDetections);
-          draw_expressions(myCanvas, resizedDetections);
-          // find good syntax for age and gender
-          //draw_age_gender(myCanvas, resizedDetections);
-        }
-        else{
-            
-        }
-      }, 200*0.99); 
-    },200);
-  }
-  add_event_video(eventVideo);
-}
-
 // version without set_timeout but with
 // continuation passing function
 function expression() {
@@ -164,15 +100,13 @@ function expression() {
     const myDisplaySize = display_size(height, width);
     match_dimensions(myCanvas, myDisplaySize);
     set_interval( () => {
-      const detections = detect_all_faces_video("all","tinyFaceDetector",[]);
+      const detections = detect_all_faces_video("all","tinyFaceDetector");
       do_after_detection(() => {
           const resizedDetections = resize_results(detections(),myDisplaySize);
           get_context(myCanvas);
           draw_detections(myCanvas, resizedDetections);
           draw_landmarks(myCanvas, resizedDetections);
           draw_expressions(myCanvas, resizedDetections);
-          // find good syntax for age and gender
-          //draw_age_gender(myCanvas, resizedDetections);
       }); 
     },200);
   }
@@ -249,7 +183,7 @@ function capture_faces() {
           get_context(myCanvas);
           console_log(resizedDetections);
           draw_detections(myCanvas, resizedDetections);
-          const boxes = box_faces(resizedDetections);
+          const boxes = get_boxes(resizedDetections);
           console_log(boxes);
           const images = convert_to_img(boxes);
           console_log(images);
@@ -281,7 +215,7 @@ function capture_faces2(knn) {
         if (detection_done() === true) {
           const resizedDetections = resize_results(detections(),myDisplaySize);
           get_context(myCanvas);
-          const boxes = box_faces(resizedDetections);
+          const boxes = get_boxes(resizedDetections);
           for (let i=0; i < array_length(boxes) ; i=i+1){
             const box = boxes[i];
             const image = convert_to_image(box);
@@ -323,7 +257,7 @@ function capture_faces2(knn) {
       do_after_detection(() => {
           const resizedDetections = resize_results(detections(),myDisplaySize);
           get_context(myCanvas);
-          const boxes = box_faces(resizedDetections);
+          const boxes = get_boxes(resizedDetections);
           for (let i=0; i < array_length(boxes) ; i=i+1){
             const box = boxes[i];
             const image = convert_to_image(box);
