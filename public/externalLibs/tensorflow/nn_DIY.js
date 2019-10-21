@@ -378,18 +378,17 @@ function one_step_train() {
         // backward: learning part
         // we calculate our delta
         const delta = output - o1;
-        // then we calculate our derivative 
+        // then we calculate our derivative for the output layer
         // from formula of derivative of loss function
         const o1_delta = 2 * delta * derivative_sigmoid(o1_input);
 
-        //and for our equatation w1 * h1 + w2 * h2 we're trying to alter weights first
+        // we adapt weights and bias
         h1_o1_delta = h1_o1_delta + h1 * o1_delta;
         h2_o1_delta = h2_o1_delta + h2 * o1_delta;
         bias_o1_delta = bias_o1_delta + o1_delta;
         
-        //and then we're trying to alter our h1 and h2.
-        //but we cannot alter them directly, as they are functions of other weights too
-        //so we need to alter their weights by same approach 
+        // then we calculate derivatives for the hiden layer
+        // and adapt weights and bias
         
         const h1_delta = o1_delta * derivative_sigmoid(h1_input);
         const h2_delta = o1_delta * derivative_sigmoid(h2_input);
@@ -665,18 +664,17 @@ function one_step_train() {
         // backward: learning part
         // we calculate our delta
         const delta = output - o1;
-        // then we calculate our derivative 
+        // then we calculate our derivative for the output layer
         // from formula of derivative of loss function
         const o1_delta = 2 * delta * derivative_sigmoid(o1_input);
 
-        //and for our equatation w1 * h1 + w2 * h2 we're trying to alter weights first
+        // we adapt weights and bias
         h1_o1_delta = h1_o1_delta + h1 * o1_delta;
         h2_o1_delta = h2_o1_delta + h2 * o1_delta;
         bias_o1_delta = bias_o1_delta + o1_delta;
         
-        //and then we're trying to alter our h1 and h2.
-        //but we cannot alter them directly, as they are functions of other weights too
-        //so we need to alter their weights by same approach 
+        // then we calculate derivatives for the hiden layer
+        // and adapt weights and bias
         
         const h1_delta = o1_delta * derivative_sigmoid(h1_input);
         const h2_delta = o1_delta * derivative_sigmoid(h2_input);

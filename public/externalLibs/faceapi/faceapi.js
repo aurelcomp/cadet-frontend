@@ -135,7 +135,7 @@ function resetPhotoC() {
 
 
 // // ---------------------------------------------
-// // LVL1 
+// // LVL1 - Attract curiosity
 // // ---------------------------------------------
 
 // Train Face Recognition after having launched the video
@@ -592,8 +592,10 @@ function add_event_video(action_video){
   }
 }
 
+// global variable for face detection
 let detect_faces=undefined
 let faces
+
 // without parameters for detection
 function detect_all_faces_video2() {
   detect_faces=undefined
@@ -895,26 +897,87 @@ function get_gender(detection){
   return detection.gender
 }
 
+/**
+ * Dertermines which is the closest known face in 
+ * face_matcher from the face whose descriptor was passed.
+ * @param {face-matcher} face_matcher - face-matcher which store 
+ * the data needed to apply recognition (the labelled embedding database
+ * and the maximum distance between two faces to be recognised as same).
+ * @param {Array} face_matcher - Embedding of the face we want to recognise.
+ * @return {match} The infered recognized face.
+ */
 function find_best_match(face_matcher, descriptor) {
-return face_matcher.findBestMatch(descriptor)
+  const match = face_matcher.findBestMatch(descriptor)
+  return match
 }
 
-function draw_box(detection, result, canvas) {
+/**
+ * Gives the label of the match.
+ * @param {match} match - The infered recognized face.
+ * @return {String} The label of the infered recognized face.
+ */
+function get_label_match(match){
+  return match._label
+}
+
+/**
+ * Gives the distance between the face recognized
+ * and the corresponding face in the database.
+ * @param {match} match - The infered recognized face.
+ * @return {Number} The distance between the face recognized
+ * and the corresponding face in the database.
+ */
+function get_distance_match(match){
+  return match._distance
+}
+
+/**
+ * Draw a box on the face on which we applied recognition
+ * with the result of the find_best_match function.
+ * @param {Canvas} my_canvas - The canvas on which we want to 
+ * draw the box.
+ * @param {detection} detection - The detected face on which we applied
+ * recognition.
+ * @param {match} match - The infered recognized face.
+ * @return {undefined}
+ */
+function draw_match(my_canvas, detection, match) {
 const box = detection.detection.box;
-const drawBox = new faceapi.draw.DrawBox(box, { label: result.toString() })
-drawBox.draw(canvas);
+const drawBox = new faceapi.draw.DrawBox(box, { label: match.toString() })
+drawBox.draw(my_canvas);
 }
 
-function draw_detections(canvas, resizedDetections) {
-  faceapi.draw.drawDetections(canvas, resizedDetections);
+/**
+ * Draw a box on each detected face.
+ * @param {Canvas} my_canvas - The canvas on which we want to 
+ * draw the boxes.
+ * @param {Array} resized_detections - Array of the resized detected faces.
+ * @return {undefined}
+ */
+function draw_detections(my_canvas, resized_detections) {
+  faceapi.draw.drawDetections(my_canvas, resized_detections);
 }
 
-function draw_landmarks(canvas, resizedDetections) {
-  faceapi.draw.drawFaceLandmarks(canvas, resizedDetections);
+/**
+ * Draw the face landmarks on each detected face.
+ * @param {Canvas} my_canvas - The canvas on which we want to 
+ * draw the boxes.
+ * @param {Array} resized_detections - Array of the resized detected faces.
+ * @return {undefined}
+ */
+function draw_landmarks(my_canvas, resized_detections) {
+  faceapi.draw.drawFaceLandmarks(my_canvas, resized_detections);
 }
 
-function draw_expressions(canvas, resizedDetections) {
-  faceapi.draw.drawFaceExpressions(canvas, resizedDetections);
+/**
+ * Draw the faces' expression on each detected face.
+ * @param {Canvas} my_canvas - The canvas on which we want to 
+ * draw the boxes.
+ * @param {Array} resized_detections - Array of the resized detected faces.
+ * @return {undefined}
+ */
+function draw_expressions(my_canvas, resized_detections) {
+  faceapi.draw.drawFaceExpressions(my_canvas, resized_detections);
 }
 
 function get_context(canvas) {
@@ -934,23 +997,49 @@ function set_timeout(myFunction,time) {
 setTimeout(myFunction,time);
 }
 
-// value of setTimeout fixed to 150ms
+// To deal with asynchronism issues. We need to wait
+// detection results before continuing the program.
+// value of setTimeout fixed to 150ms because it 
+// seems to be enough to calculate detections.
 const do_after_detection_timeout = 150;
-// explain choice
-function do_after_detection(myFunction) {
+
+/**
+ * Continuation passing function which run myFunction after 
+ * the detection has been done.
+ * @param {function} my_function - The function to run after the 
+ * detection has been done.
+ * @return {undefined}
+ */
+function do_after_detection(my_function) {
   setTimeout(() => {
     if (detect_faces === true){
-      myFunction();
+      my_function();
     }
   }, do_after_detection_timeout)       
 }
 
-// function push in array
+/**
+ * Add an element at the end of the Array.
+ * Ex:
+ * <CODE>
+ * let L = [1 ,2];
+ * array_push(L, 3);
+ * // L = [1, 2, 3]
+ * </CODE>
+ * @param {Array} array - The Array on which we want to
+ * add an element.
+ * @param {element} element - The element we want to add.
+ * @return {undefined}
+ */
 function array_push(array, element) {
   array.push(element);
 }
 
-// function num to string
+/**
+ * Converts a Number into a String
+ * @param {Number} num - The Number we want to convert to String.
+ * @return {String} The String converted Number.
+ */
 function to_string(num){
   return num.toString();
 }
@@ -961,10 +1050,18 @@ function to_string(num){
 // // ---------------------------------------------
 
 
-// get the position of the faces detected
-function get_boxes(resizedDetection) {
+/**
+ * Gets the position of the faces detected
+ * @param {Array} resized_detections - Array of the resized detected faces.
+ * @return {Array} Array of Arrays. Each Array contains the box position 
+ * for one face. The box position are: box = [height, width, x, y].
+ * x and y are coordinate of the top left corner of the box and the origin
+ * of the coordinates in the top left corner of the canvas on xhich faces
+ * where detected.
+ */
+function get_boxes(resized_detections) {
   var boxes = [];
-  resizedDetection.forEach(function(detection) {
+  resized_detections.forEach(function(detection) {
     const box = detection._box;
     const box_position = [box._height, box._width, box._x, box._y];
     boxes.push(box_position);
@@ -972,7 +1069,12 @@ function get_boxes(resizedDetection) {
   return boxes
 }
 
-// take images of faces detected
+/**
+ * Takes snap images of each of the boxes regions (the faces detected) 
+ * on the webcam video.
+ * @param {Array} boxes - Array containing the box for each face detected.
+ * @return {Array} Array of images of all faces detected.
+ */
 function convert_to_img(boxes) {
   var images = [];
   // to store snap of the webcam
@@ -990,7 +1092,12 @@ function convert_to_img(boxes) {
   return images;
 }
 
-// convert box dimension of a face detected to its snap image of the video canva
+/**
+ * Takes a snap image of the box region on the webcam video
+ * where the face was detected.
+ * @param {box} boxe - The box of a detected face.
+ * @return {image} Images of the detected face.
+ */
 function convert_to_image(box) {
   // to store snap of the webcam
   var hiden_canvas=document.getElementById('hiden-canvas');
@@ -1007,61 +1114,25 @@ function convert_to_image(box) {
 }
 
 
+// lineWidth set to 2
+const line_width = 2;
 
-// classify each image of a list with mobilenet
-async function classify_images(images){
-  // Make a prediction through the model on each image
-  images.forEach(async function(img) {
-    const result = await mobileNet.classify(img);
-    console.log( 
-      'prediction: '+ result[0].className + '\n' +
-      'probability: '+ result[0].probability
-    );
-    console.log(result);
-
-    const xlogits = mobileNet.infer(img, 'conv_preds');
-    console.log('Predictions:');
-    const result2 = await classifier.predictClass(xlogits);
-    console.log(result2);
-
-
-  })
-}
-
-// train KNN over mobilnet inference on an online stored database
-async function train_glasses_detection(classifier) {
-  const labels = ['glasses', 'no_glasses'];
-  return Promise.all(
-    labels.map(async label => {
-      for (let i = 1; i <= 3; i++) {
-        const img = await faceapi.fetchImage(`https://raw.githubusercontent.com/aurelcomp/Database/master/glasses_detection/${label}/${i}.png`)
-        console.log('loaded')
-        const logits = await mobileNet.infer(img, 'conv_preds');
-        if (label=='glasses'){
-          classifier.addExample(logits, 1);
-          console.log('added to KNN glasses')
-        }
-        else {
-          classifier.addExample(logits, 0);
-          console.log('added to KNN no glasses')
-        }
-        
-      }
-    })
-  )
-}
-
-
-// Draw custom box with text
-function draw_custom_box( box, text, myCanvas){
+/**
+ * Draws a custom box with text.
+ * @param {Canvas} my_canvas - The canvas on which to draw the box.
+ * @param {box} box - The box dimensions of the face detected.
+ * @param {String} text - The text to attach to the box.
+ * @return {image} Images of the detected face.
+ */
+function draw_custom_box(my_canvas, box, text){
   const myBox = { x: box[2], y: box[3], width: box[1], height: box[0] }
   // see DrawBoxOptions below
   const drawOptions = {
   label: text,
-  lineWidth: 2
+  lineWidth: line_width
   }
   const drawBox = new faceapi.draw.DrawBox(myBox, drawOptions)
-  drawBox.draw(myCanvas)
+  drawBox.draw(my_canvas)
 }
 
 
@@ -1070,6 +1141,14 @@ function draw_custom_box( box, text, myCanvas){
 let list_verification_loaded = [];
 let images_loaded = [];
 let iteration_load = -1;
+
+/**
+ * Load an image from an url and returns a promise of the image: 
+ * a nullary function which returns the image when loaded has finished.
+ * @param {String} url - The URL of the image we want to load.
+ * @return {function} promise of the image: a nullary function 
+ * which returns the image when loaded has finished.
+ */
 function fetch_image(url){
   list_verification_loaded.push(undefined)
   iteration_load = iteration_load + 1;
@@ -1084,6 +1163,7 @@ function fetch_image(url){
     }
   };
 }
+
 async function fetch_image_async(url, i){
   const image = await faceapi.fetchImage(url);
   // To convert image to dataImage 
@@ -1098,9 +1178,5 @@ async function fetch_image_async(url, i){
   list_verification_loaded[i] = true;
 }
 
-// convert int to string
-// needed for modifying url to select images
-function int_to_string(number){
-  return number.toString();
-}
+
 

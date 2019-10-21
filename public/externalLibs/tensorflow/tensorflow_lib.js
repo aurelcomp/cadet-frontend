@@ -27,13 +27,9 @@ data = await dataReq.json();
 data_loaded = true;
 }
 
-// function push in array
-function array_push(array, element) {
-    array.push(element);
-  }
 
 // function slice array
-function array_slice(array, start,end) {
+function array_slice(array, start, end) {
     return array.slice(start,end);
 }
 
@@ -63,6 +59,7 @@ function tf_one_hot(indices, depth) {
     return tf.oneHot(indices.toInt(), depth);
 }
 
+// high level function to convert data to tensor
 function convert_to_tensor(data, targets, testSplit) {
     const numExamples= data.length;
     if (numExamples!== targets.length) {
@@ -221,7 +218,7 @@ async function async_model_fit_withTest(model, XY, numberOfEpochs) {
     modelTrained=true;
 }
 
-
+// high level function to train a pre-created model
 // Train the model with Training and Testing sets
 let model
 let modelTrained = undefined;
@@ -239,11 +236,38 @@ function train_model(xTrain, yTrain, xTest, yTest) {
 }
 async function async_train_model(xTrain, yTrain, xTest, yTest) {
     console.log('launch training')
-    model = await trainModel(xTrain, yTrain, xTest, yTest);
+    model = await train_the_model(xTrain, yTrain, xTest, yTest);
     console.log('training finished')
     modelTrained = true;
 }
 
+// Train the preset model
+async function train_the_model(xTrain, yTrain, xTest, yTest){
+    const model = tf.sequential();
+    const learningRate = 0.01;
+    const numberOfEpochs = 40;
+    const optimizer = tf.train.adam(learningRate);
+  
+    model.add(tf.layers.dense(
+      { units:10, activation: 'sigmoid', inputShape: [xTrain.shape[1]]}));
+    
+    model.add(tf.layers.dense(
+      { units:labels.length, activation: 'softmax'}));
+      
+    model.compile(
+      {optimizer: optimizer, loss: 'categoricalCrossentropy', metrics: ['accuracy']});
+    console.log(yTrain);
+    const history = await model.fit(xTrain, yTrain,
+      {epochs: numberOfEpochs, validationData: [xTest, yTest],
+        callbacks: {
+            onEpochEnd: async (epoch, logs) => {
+              console.log("Epoch: " + epoch + " logs: " + logs.loss);
+              await tf.nextFrame();
+            }
+        }
+      });
+    return model
+  }
 // --------------------------
 // Functions to use model
 // --------------------------
@@ -303,6 +327,7 @@ function infer_mobilenet(img){
   }
 }
 
+
 // get classification from MobileNet
 function classify_mobilenet(img){
   if (mobileNet_loaded === undefined){
@@ -310,14 +335,59 @@ function classify_mobilenet(img){
         "to load the MobileNet model before using it for classification");
   }
   else {
-    return mobileNet.classify(img);
+    async_classify_mobilenet(img);
+    return () => {
+        if (mobilenet_done === undefined) {
+          throw new Error("prediction still in progress")
+            }
+        else {
+            mobilenet_done = undefined;
+          return result_mobilenet;
+        }
+    };
   }
+}
+// Async function linked
+let result_mobilenet
+let mobilenet_done = undefined
+async function async_classify_mobilenet(img){
+    const result = await mobileNet.classify(img);
+    let predictions = [];
+    for (let i=0; i < result.length ; i=i+1){
+        const className = result[i].className;
+        const probability = result[i].probability;
+        const prediction = [className, probability];
+        array_push(predictions, prediction);
+    }
+    result_mobilenet = predictions;
+    mobilenet_done = true;
+}
+
+// value of setTimeout fixed to 150ms
+const do_after_mobilenet_timeout = 150;
+function do_after_mobilenet(myFunction) {
+    setTimeout(() => {
+        if (mobilenet_done === true){
+            myFunction();
+        }
+        }, do_after_prediction_timeout)
 }
 
 // create KNN Classifier
 function create_knn(){
   return knnClassifier.create()
 }  
+
+// add example to knn classifier
+function add_example_knn(classifier, example, label){
+    if (Number.isInteger(label) === false){
+        throw new Error("label argument of 'add_example_knn' must be an integer")
+    }
+    else {
+        classifier.addExample(example, label)
+    }
+    
+}
 
 // get classification from KNN Classifier
 function predict_class(classifier, inference){
@@ -332,17 +402,6 @@ function predict_class(classifier, inference){
     }
   };
 }  
-
-// add example to knn classifier
-function add_example_knn(classifier, example, label){
-    if (Number.isInteger(label) === false){
-        throw new Error("label argument of 'add_example_knn' must be an integer")
-    }
-    else {
-        classifier.addExample(example, label)
-    }
-    
-}
 
 let prediction;
 let prediction_done = undefined;
