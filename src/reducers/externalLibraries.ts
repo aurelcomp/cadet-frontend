@@ -248,7 +248,7 @@ const tensorflowLibrary = [
   'create_knn',
   'predict_class',
   'add_example_knn',
-  'do_after_prediction'
+  'do_after_knn'
 ];
 
 /**

@@ -272,7 +272,7 @@ function prepareModel(xTrain, yTrain, xTest, yTest){
 
   add_hidden_layer(model, 3, 'softmax');
 
-  compile(model, optimizer, 'categoricalCrossentropy', ['accuracy']);
+  compile(model, optimizer, 'categoricalCrossentropy');
 
   // Train the model
   return model_fit(model, [xTrain, yTrain, xTest, yTest], numberOfEpochs);
@@ -450,7 +450,7 @@ function classify_faces(knn) {
             const image = convert_to_image(box);
             const inference = infer_mobilenet(image);
             const result2 = predict_class(knn, inference);
-            do_after_prediction(() => {
+            do_after_knn(() => {
                 const result = result2();
                 const category = result[0];
                 let label = 'unknown';

@@ -203,8 +203,8 @@ function train_for(iterations) {
 // ------------------------------------------------------------------------------
 
 
-// input [height, arm span, shoulder width, hip width]
-// output 0:man, 1: woman
+// input: [height, arm span, shoulder width, hip width]
+// output: 0 -> man, 1 -> woman
 const data = [
     [[1740, 1790, 465, 360], 0],
     [[1840, 1750, 565, 460], 0],
@@ -299,6 +299,36 @@ function results_nn() {
         // for a space between 2 display
         display('---'); 
     }     
+}
+
+function accuracy_nn(data, threshold) {
+    let error=0;
+    for (let i=0; i<array_length(data); i=i+1){
+        // get input and output from data
+        const input = data[i][0];
+        const i1 = input[0];
+        const i2 = input[1];
+        const i3 = input[2];
+        const i4 = input[3];
+        const output = data[i][1];
+
+        // calculate nn prediction
+        const result_nn = nn(i1, i2, i3, i4);
+
+        // calculate distance error between prediction and expected
+        // and add an error if the distance is bigger than the
+        // defined threshold
+        if (math_abs(output - result_nn) > threshold){
+            error = error + 1;
+        }
+        else {
+            // nothing
+        }
+    }
+    // calculate the accuracy
+    const accuracy = (array_length(data) - error) / array_length(data);
+    display(accuracy, 'accuracy: ');
+    return accuracy;
 }
 
 function error_nn() {
@@ -455,7 +485,7 @@ const unormalized_data = [
 
 // normalize data with gaussian normalisation
 // to avoid issues in the NN
-function gaussian_normalise_data(unormalized_data){
+function normalise_data(unormalized_data){
     let means = [0, 0, 0, 0];
     let deviations = [0, 0, 0, 0];
     // we calculate means first
@@ -668,13 +698,13 @@ function one_step_train() {
         // from formula of derivative of loss function
         const o1_delta = 2 * delta * derivative_sigmoid(o1_input);
 
-        // we adapt weights and bias
+        // we adapt weights and bias deltas
         h1_o1_delta = h1_o1_delta + h1 * o1_delta;
         h2_o1_delta = h2_o1_delta + h2 * o1_delta;
         bias_o1_delta = bias_o1_delta + o1_delta;
         
         // then we calculate derivatives for the hiden layer
-        // and adapt weights and bias
+        // and adapt weights and bias deltas
         
         const h1_delta = o1_delta * derivative_sigmoid(h1_input);
         const h2_delta = o1_delta * derivative_sigmoid(h2_input);

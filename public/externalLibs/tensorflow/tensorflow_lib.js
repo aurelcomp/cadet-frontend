@@ -27,39 +27,87 @@ data = await dataReq.json();
 data_loaded = true;
 }
 
-
-// function slice array
-function array_slice(array, start, end) {
-    return array.slice(start,end);
+/**
+ * Returns the selected elements in an Array (the elements between the positions
+ * start and end), as a new Array object.
+ * Ex:
+ * <CODE>
+ * let L = [1 ,2, 3, 4, 5, 6];
+ * const T = array_slice(L, 1, 3);
+ * // T = [2, 3]
+ * </CODE>
+ * @param {Array} myArray - Array from which we want to extract elements.
+ * @param {Number} begin -  Position of the first element to select.
+ * @param {Number} end - End for the selection. The element at the end position
+ * is not selected. 
+ * @return {Array} Array of the selected elements.
+ */
+function array_slice(myArray, begin, end) {
+    return myArray.slice(begin,end);
 }
 
-// tf.tidy function
-function tf_tidy(callback) {
-    tf.tidy(callback);
+/**
+ * Executes the provided function <CODE>myFunction</CODE> and after it is executed, cleans up all 
+ * intermediate tensors allocated by <CODE>myFunction</CODE> except those returned by <CODE>myFunction</CODE>
+ * @param {function} myFunction - Function to execute.
+ * @return {undefined}
+ */
+function tf_tidy(myFunction) {
+    tf.tidy(myFunction);
 }
 
-// tf.concat function
-function tf_concat(values,axis) {
-    return tf.concat(values,axis);
+/**
+ * Concatenates an Array of tf_tensors along a given axis.
+ * @param {Array} tensors - An Array of tensors to concatenate.
+ * @param {Number} axis - The axis to concate along. Defaults to 0 (the first dim).
+ * @return {tf_tensor} The concatenated tensor.
+ */
+function tf_concat(tensors,axis) {
+    return tf.concat(tensors,axis);
 }
 
-// create 2D tensor
-function tf_tensor2d(values, shape) {
-    return tf.tensor2d(values, shape);
-}
-
-// create 1D tensor
+/**
+ * Creates rank-1 tf_tensor with the provided values and shape.
+ * @param {Array} values - The values of the tensor.
+ * @param {Number} shape - The shape of the tensor.
+ * @return {tf_tensor1D} The tf_tensor1D.
+ */
 function tf_tensor1d(values) {
     return tf.tensor1d(values);
 }
 
-// create 2D tensor
+/**
+ * Creates rank-2 tf_tensor with the provided values and shape.
+ * @param {Array} values - The values of the tensor.
+ * @param {[Number, Number]} shape - The shape of the tensor.
+ * @return {tf_tensor2D} The tf_tensor2D.
+ */
+function tf_tensor2d(values, shape) {
+    return tf.tensor2d(values, shape);
+}
+
+/**
+ * Creates a one-hot tf_tensor. The locations represented by 
+ * indices take value 1, while all other locations take value 0.
+ * @param {tf_tensor1D} indices - tf_tensor1D of indices with type Number.
+ * @param {Number} depth - The depth of the one hot dimension.
+ * @return {tf_tensor2D} The one hot tf_tensor2D.
+ */
 function tf_one_hot(indices, depth) {
     // toInt() to convert in integer (to simplify for student)
     return tf.oneHot(indices.toInt(), depth);
 }
 
-// high level function to convert data to tensor
+/**
+ * Creates X and Y tensors for training and testing from data (X) and targets (Y) elements.
+ * @param {Array} data - Array of input data.
+ * @param {Array} targets - Array of output corresponding to the input data.
+ * @param {Number} testSplit - The percentage of data repartition between training and testing tensors. 
+ * Value between 0 and 1. testSplit of 0.2
+ * means that 80% of the data will be used in the training tensors and 20% for the testing tensors. 
+ * @return {Array} Returns the Array containing the X and Y tensors for training and testing: 
+ * [xTrain, yTrain, xTest, yTest]
+ */
 function convert_to_tensor(data, targets, testSplit) {
     const numExamples= data.length;
     if (numExamples!== targets.length) {
@@ -86,7 +134,13 @@ function convert_to_tensor(data, targets, testSplit) {
     }
 }
 
-// function slice array
+/**
+ * Extracts a slice from a tf_tensor starting at coordinates begin and is of size size.
+ * @param {tf_tensor} tensor - Array of input data.
+ * @param {Array} begin - Number or Array of Numbers. The coordinates to start the slice from. 
+ * @param {Array} size - Number or Array of Numbers. The size of the slice.
+ * @return {tf_tensor} Returns the sliced tf_tensor as specified.
+ */
 function tf_slice(tensor, begin, size) {
     return tensor.slice(begin, size);
 }
@@ -95,45 +149,96 @@ function tf_slice(tensor, begin, size) {
 // Functions to create/train model
 // --------------------------
 
-
-// Create a sequential model
+/**
+ * Creates a tf_sequential model. A sequential model is any model where the outputs of one layer 
+ * are the inputs to the next layer.
+ * @return {tf_sequential} The model created.
+ */
 function tf_sequential() {
     return tf.sequential(); 
 }
 
-// Add a dense layer
+/**
+ * Create and add the first layer of the model with the specified parameters. This layer is 
+ * special because we need to specify its input shape. For the next layers, the input shape will
+ * be automatically the ouput shape of the previous layer.
+ * @param {tf_sequential} model - The model.
+ * @param {Number} neurons - The number of neurons in the layer (number of outputs).
+ * @param {String} fActivation - Activation function to use, between: 'elu', 'hardSigmoid','linear',
+ * 'relu', 'relu6', 'selu', 'sigmoid', 'softmax', 'softplus', 'softsign', 'tanh'.
+ * @param {Number} input_shape - The input dimension of the model.
+ * @return {undefined}
+ */
 function add_input_layer(model, neurons, fActivation, input_shape) {
     // inputShape is an array
     model.add(tf.layers.dense({units: neurons, activation: fActivation, inputShape: input_shape}));
 }
 
-// Add a hidden layer
+/**
+ * Create and add an hidden layer of the model with the specified parameters.
+ * @param {tf_sequential} model - The model.
+ * @param {Number} neurons - The number of neurons in the hidden layer (number of outputs).
+ * @param {String} fActivation - Activation function to use, between: 'elu', 'hardSigmoid','linear',
+ * 'relu', 'relu6', 'selu', 'sigmoid', 'softmax', 'softplus', 'softsign', 'tanh'.
+ * @return {undefined}
+ */
 function add_hidden_layer(model, neurons, fActivation) {
     model.add(tf.layers.dense({units: neurons, activation: fActivation}));
 }
 
-// compile model    
-// myMetrics is a list, eg. ['accuracy']
-function compile(model, optimizer, lossFunction, myMetrics) {
-    model.compile({optimizer: optimizer, loss: lossFunction, metrics: myMetrics});
-}
 
-// get shape tensor
-function tf_shape(tensor) {
-    return tensor.shape;
-}
-
-// Define optimizer
 // To complete with all optimizer we want to allow
+
+/**
+ * Configures and prepares the model for training and evaluation. 
+ * Compiling outfits the model with an optimizer, loss, and/or metrics. 
+ * Calling fit or evaluate on an un-compiled model will throw an error.
+ * @param {String} myOptimizer - The optimizer to use, betweeen: 'sgd' and 'adam'. 
+ * @param {Number} learningRate - The learning rate to use for the optimizing algorithm. 
+ * @return {tf_optimizer}
+ */
 function tf_train(myOptimizer, learningRate) {
     switch (myOptimizer) {
         case 'adam':
             return tf.train.adam(learningRate);
+        case 'sgd':
+            return tf.train.sgd(learningRate);
     }
-    
 }
 
-// fit the model
+/**
+ * Configures and prepares the model for training and evaluation. 
+ * Compiling outfits the model with an optimizer, loss, and/or metrics. 
+ * Calling fit or evaluate on an un-compiled model will throw an error.
+ * @param {tf_sequential} model - The model.
+ * @param {tf_optitimizer} optimizer - Optimizer to use. 
+ * @param {String} lossFunction - Loss function to use, between: 'categoricalCrossentropy', 
+ * 'meanAbsoluteError', 'cosineSimilarity', 'meanSquaredError'.
+ * @return {undefined}
+ */
+function compile(model, optimizer, lossFunction,) {
+    model.compile({optimizer: optimizer, loss: lossFunction});
+}
+
+/**
+ * Returns the shape of a tf_tensor.
+ * @param {tf_tensor} tensor - The tensor.
+ * @return {Array} Shape of the tensor.
+ */
+function tf_shape(tensor) {
+    return tensor.shape;
+}
+
+/**
+ * Fit the model with the given data for the number of iterations specified.
+ * Returns a promise, a function which will return the model when it is called
+ * if the training of the model has been finished.
+ * @param {tf_sequential} model - The model.
+ * @param {Array} XY - Array of X and Y tensors, either [X, Y] if no testing data or 
+ * [xTrain, yTrain, xTest, yTest] if there are testing data.
+ * @param {Number} numberOfEpochs - The number of times to iterate over the training data arrays.
+ * @return {function} Promise of the trained model.
+ */
 function model_fit(model, XY, numberOfEpochs) {
     // pass to undefined when launch a new training
     modelTrained = undefined;
@@ -223,6 +328,16 @@ async function async_model_fit_withTest(model, XY, numberOfEpochs) {
 let model
 let modelTrained = undefined;
 
+/**
+ * Train a pre-defined model for the classification of faces' embeddings.
+ * Returns a promise, a function which will return the model when it is called
+ * if the training of the model has been finished.
+ * @param {tf_tensor} xTrain - The tensor for the input training data.
+ * @param {tf_tensor} yTrain - The tensor for the output training data.
+ * @param {tf_tensor} xTest - The tensor for the input testing data.
+ * @param {tf_tensor} yTest - The tensor for the output testing data.
+ * @return {function} Promise of the trained model.
+ */
 function train_model(xTrain, yTrain, xTest, yTest) {
     async_train_model(xTrain, yTrain, xTest, yTest);
     return () => {
@@ -272,7 +387,12 @@ async function train_the_model(xTrain, yTrain, xTest, yTest){
 // Functions to use model
 // --------------------------
 
-// prediction using the model
+/**
+ * Generates output predictions of a model for the input given as argument.
+ * @param {tf_sequential} model - The trained model.
+ * @param {tf_tensor} input - The input data.
+ * @return {tf_tensor} The predictions of the model.
+ */
 function predict(model, input) {
     if (modelTrained === undefined) {
         model();
@@ -282,10 +402,20 @@ function predict(model, input) {
     }
 }
 
+/**
+ * Gives the values of the prediction for each output neuron.
+ * @param {tf_tensor} prediction - The predictions of a model.
+ * @return {Array} The values of the prediction for each output neuron.
+ */
 function get_proba(prediction) {
     return prediction.arraySync();
 }
 
+/**
+ * Gives the highest-value prediction.
+ * @param {tf_tensor} prediction - The predictions of a model.
+ * @return {Array} The highest-value prediction.
+ */
 function get_highest_prediction(prediction) {
     return prediction.argMax(-1).arraySync();
 }
@@ -304,6 +434,11 @@ function alertPrediction(prediction) {
 // load MobileNet model
 let mobileNet;
 let mobileNet_loaded = undefined;
+
+/**
+ * Load the MobileNet model for image classification.
+ * @return {undefined} 
+ */
 function load_mobilenet(){
   load_mobilenet_async();
   return "loading MobileNet..."
@@ -316,19 +451,24 @@ async function load_mobilenet_async(){
   console.log('Successfully loaded model');
 }
 
-// get inference from MobileNet
-function infer_mobilenet(img){
+
+function infer_mobilenet(image){
   if (mobileNet_loaded === undefined){
     throw new Error("Call load_mobilenet(); " +
         "to load the MobileNet model before using it for inference");
   }
   else {
-    return mobileNet.infer(img, 'conv_preds');
+    return mobileNet.infer(image, 'conv_preds');
   }
 }
 
-
-// get classification from MobileNet
+/**
+ * Apply MobileNet classification on an image. Returns a promise of the
+ * classification, ie. a function which returns the classification when it is
+ * called if the classification has been finished. 
+ * @param {Image} image - The predictions of a model.
+ * @return {function} Promise of the classification.
+ */
 function classify_mobilenet(img){
   if (mobileNet_loaded === undefined){
     throw new Error("Call load_mobilenet(); " +
@@ -365,6 +505,14 @@ async function async_classify_mobilenet(img){
 
 // value of setTimeout fixed to 150ms
 const do_after_mobilenet_timeout = 150;
+
+/**
+ * Continuation passing function which run myFunction after 
+ * the MobileNet classification has been done.
+ * @param {function} my_function - The function to run after the 
+ * classification has been done.
+ * @return {undefined}
+ */
 function do_after_mobilenet(myFunction) {
     setTimeout(() => {
         if (mobilenet_done === true){
@@ -373,12 +521,21 @@ function do_after_mobilenet(myFunction) {
         }, do_after_prediction_timeout)
 }
 
-// create KNN Classifier
+/**
+ * Create a KNN classifier model.
+ * @return {knn_model} The KNN model.
+ */
 function create_knn(){
   return knnClassifier.create()
 }  
 
-// add example to knn classifier
+/**
+ * Add an example to the KNN classifier.
+ * @param {knn_model} classifier - The KNN model.
+ * @param {example} example - An example to add to the dataset, usually an activation from another model.
+ * @param {Number} label - The label (class name) of the example.
+ * @return {undefined}
+ */
 function add_example_knn(classifier, example, label){
     if (Number.isInteger(label) === false){
         throw new Error("label argument of 'add_example_knn' must be an integer")
@@ -386,12 +543,17 @@ function add_example_knn(classifier, example, label){
     else {
         classifier.addExample(example, label)
     }
-    
 }
 
-// get classification from KNN Classifier
-function predict_class(classifier, inference){
-  predict_class_async(classifier, inference);
+// 
+/**
+ * Apply KNN classification on an input.
+ * @param {knn_model} classifier - The KNN model.
+ * @param {example} input - An example to make a prediction on, usually an activation from another model.
+ * @return {function} Promise of the classification.
+ */
+function predict_class(classifier, input){
+  predict_class_async(classifier, input);
   return () => {
     if (prediction_done === undefined) {
       throw new Error("prediction still in progress")
@@ -415,7 +577,15 @@ async function predict_class_async(classifier, inference){
 
 // value of setTimeout fixed to 150ms
 const do_after_prediction_timeout = 150;
-function do_after_prediction(myFunction) {
+
+/**
+ * Continuation passing function which run myFunction after 
+ * the KNN classification has been done.
+ * @param {function} my_function - The function to run after the 
+ * classification has been done.
+ * @return {undefined}
+ */
+function do_after_knn(myFunction) {
     setTimeout(() => {
         if (prediction_done === true){
             myFunction();
